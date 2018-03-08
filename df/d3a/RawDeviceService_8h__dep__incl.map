@@ -1,0 +1,12 @@
+<map id="/home/travis/build/AliceO2Group/AliceO2/Framework/Core/include/Framework/RawDeviceService.h" name="/home/travis/build/AliceO2Group/AliceO2/Framework/Core/include/Framework/RawDeviceService.h">
+<area shape="rect" id="node2" href="$de/d88/SimpleRawDeviceService_8h.html" title="/home/travis/build\l/AliceO2Group/AliceO2\l/Framework/Core/include\l/Framework/SimpleRawDeviceService.h" alt="" coords="665,126,923,197"/>
+<area shape="rect" id="node10" href="$d7/d54/runDataProcessing_8cxx.html" title="/home/travis/build\l/AliceO2Group/AliceO2\l/Framework/Core/src/runDataProcessing.cxx" alt="" coords="819,253,1103,309"/>
+<area shape="rect" id="node11" href="$dc/df3/ExternalFairMQDeviceProxy_8cxx.html" title="/home/travis/build\l/AliceO2Group/AliceO2\l/Framework/Core/src/External\lFairMQDeviceProxy.cxx" alt="" coords="999,126,1196,197"/>
+<area shape="rect" id="node3" href="$d7/d78/DataSampling_8h.html" title="Definition of O2 Data Sampling, v0.1. " alt="" coords="606,246,793,317"/>
+<area shape="rect" id="node4" href="$d0/dd6/DataSampling_8cxx.html" title="Implementation of O2 Data Sampling, v0.1. " alt="" coords="5,373,261,429"/>
+<area shape="rect" id="node5" href="$d1/de8/test__DataSampling_8cxx.html" title="/home/travis/build\l/AliceO2Group/AliceO2\l/Framework/Core/test/test\l_DataSampling.cxx" alt="" coords="286,366,460,437"/>
+<area shape="rect" id="node6" href="$d2/dad/dataSamplingFullChain_8cxx.html" title="/home/travis/build\l/AliceO2Group/AliceO2\l/Framework/TestWorkflows\l/src/dataSamplingFullChain.cxx" alt="" coords="485,366,691,437"/>
+<area shape="rect" id="node7" href="$d3/dbe/dataSamplingParallel_8cxx.html" title="/home/travis/build\l/AliceO2Group/AliceO2\l/Framework/TestWorkflows\l/src/dataSamplingParallel.cxx" alt="" coords="716,366,911,437"/>
+<area shape="rect" id="node8" href="$de/da3/dataSamplingPodAndRoot_8cxx.html" title="/home/travis/build\l/AliceO2Group/AliceO2\l/Framework/TestWorkflows\l/src/dataSamplingPodAndRoot.cxx" alt="" coords="935,366,1161,437"/>
+<area shape="rect" id="node9" href="$db/d9e/dataSamplingTimePipeline_8cxx.html" title="/home/travis/build\l/AliceO2Group/AliceO2\l/Framework/TestWorkflows\l/src/dataSamplingTimePipeline.cxx" alt="" coords="1185,366,1412,437"/>
+</map>
