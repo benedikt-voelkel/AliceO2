@@ -48,6 +48,8 @@ class Cave : public FairDetector
     ~Cave() override;
     void ConstructGeometry() override;
     void createMaterials();
+    /// Finish and adapt Cave geometry to active detector geometry
+    void FinishGeometry();
 
     /// Clone this object (used in MT mode only)
     FairModule* CloneModule() const override;

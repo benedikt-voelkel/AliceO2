@@ -64,6 +64,59 @@ void Cave::ConstructGeometry()
   gGeoManager->SetTopVolume(cavevol);
 }
 
+void Cave::OptimizeGeometry()
+{
+  /// NB: Cave is TopVOlume (see above!)
+  /// Is there a more general way of getting top volume instead of asking by name?
+  /// This gives a pointer
+  // auto cavevol = gGeoManager->GetVolume("Top volume")
+  /// what exactly does this do?
+  // cavevol->FindOverlaps();
+  /// Build surface volume of all loaded modules except for cave
+  /// Loop over modules for doing this. Actually does not need to be done since cavevol is a pointer
+  /// can we do gGeoManager->SetTopVolume again here?
+  
+  /// Pointer to cave node, shape and matrix.
+  auto *caveNode = gGeoManager->GetTopNode();
+  auto *caveShape = caveNode->GetVolume()->GetShape();
+  auto *caveMatrix = caveNode->GetMatrix();
+  auto *caveOrigin[3] = caveShape->GetOrigin();
+  /// All of these are cylinders since we are looking for bounding cylinders of all detector components.
+  TObjArray* tubes;
+  /// New shape of cave
+  TGeoPcon *newShape;
+
+  /// Get all daughter nodes
+  TIter next(caveNode->GetNodes());
+  /// Loop over nodes
+  TGeoNode* node = nullptr;
+  while( node = (TGeoNode*)next() )
+  {
+    LOG(INFO) << "CAVE: Optimize for volume " << node->GetVolume()->GetName() << FairLogger::endl;
+    /// outer radius for covering tube.
+    Double_t params[4];
+    node->GetVolume()->GetShape()->GetBoundingCylinder( params );
+    /// needed to create covering tube.
+    auto dZ = node->GetVolume()->GetShape()->GetDZ();
+    auto *daughterOrigin[3] = node->GetVolume()->GetShape()->GetOrigin();
+    /// Get TGeoMatrix to adjust relative positions wrt cave origin
+    auto *daughterMatrix = node->GetMatrix();
+    daughterMatrix->LocalToMaster( 
+
+
+    auto *tube = new TGeoTube( 0, params[1], dZ );
+    tube->SetBowDimensions( tube->GetDX, tube->GetDY, tube->GetDZ, 
+    cylinders->Add( new TGeoCylinder( 0, params[1], dZ,  ) );
+
+  }
+  
+
+
+  cavevol->SetShape( newShape )
+
+
+}
+
 Cave::Cave() : FairDetector() {}
 Cave::~Cave() = default;
 Cave::Cave(const char* name, const char* Title) : FairDetector(name, Title, -1) {}

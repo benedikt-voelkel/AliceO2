@@ -20,6 +20,7 @@ int main(int argc, char* argv[])
 
   // call o2sim "macro"
   o2sim();
+  std::cout << "DONE" << std::endl;
 
   return 0;
 }
