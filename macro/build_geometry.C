@@ -195,6 +195,7 @@ void finalize_geometry(FairRunSim* run)
     return;
   }
   
+  
   const TObjArray* modArr = run->GetListOfModules();
   TIter next(modArr);
   FairModule* module = nullptr;

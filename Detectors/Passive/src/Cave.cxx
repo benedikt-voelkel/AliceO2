@@ -27,6 +27,8 @@
 #include "FairLogger.h"
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
+/// cave optimisation
+#include "TGeoTube.h"
 
 using namespace o2::Passive;
 
@@ -54,6 +56,7 @@ void Cave::ConstructGeometry()
 {
   createMaterials();
   auto& matmgr = o2::Base::MaterialManager::Instance();
+  /*
   Float_t dALIC[3];
 
   // TODO: add various options depending on whether ZDC is present or not
@@ -61,10 +64,12 @@ void Cave::ConstructGeometry()
   dALIC[1] = 2000;
   dALIC[2] = 3000;
   auto cavevol = gGeoManager->MakeBox("cave", gGeoManager->GetMedium("CAVE_Air"), dALIC[0], dALIC[1], dALIC[2]);
+  */
+  auto cavevol = gGeoManager->MakeTube("cave", gGeoManager->GetMedium("CAVE_Air"), 0., 10., 200.);
   gGeoManager->SetTopVolume(cavevol);
 }
 
-void Cave::OptimizeGeometry()
+void Cave::ModifyGeometry()
 {
   /// NB: Cave is TopVOlume (see above!)
   /// Is there a more general way of getting top volume instead of asking by name?
@@ -77,15 +82,21 @@ void Cave::OptimizeGeometry()
   /// can we do gGeoManager->SetTopVolume again here?
   
   /// Pointer to cave node, shape and matrix.
-  auto *caveNode = gGeoManager->GetTopNode();
-  auto *caveShape = caveNode->GetVolume()->GetShape();
-  auto *caveMatrix = caveNode->GetMatrix();
-  auto *caveOrigin[3] = caveShape->GetOrigin();
+  TGeoNodeMatrix *caveNode = (TGeoNodeMatrix*)gGeoManager->GetTopNode();
+  TGeoVolume *caveVolume = caveNode->GetVolume();
+  TGeoTube *caveShape = (TGeoTube*)caveVolume->GetShape();
+  TGeoTranslation* caveMatrix = (TGeoTranslation*)caveNode->GetMatrix();
+  const Double_t *caveOrigin = caveShape->GetOrigin();
   /// All of these are cylinders since we are looking for bounding cylinders of all detector components.
-  TObjArray* tubes;
-  /// New shape of cave
-  TGeoPcon *newShape;
+  TObjArray* tubeVols;
+  /// New shape of cave with initial (smallish) volume. @todo Better way to infer? Use ITS as the innermost
+  /// part or the detecor? In an artificial case, however, the ITS might not be simulated and is hence not 
+  /// present at this point...
+  /// This tube is enlarged such that the daughter volumes and their shapes are covered.
 
+  LOG(INFO) << "Cave origin, x =  " << caveOrigin[0]
+                       << ", y = " << caveOrigin[1]
+                       << ", z = " << caveOrigin[2];
   /// Get all daughter nodes
   TIter next(caveNode->GetNodes());
   /// Loop over nodes
@@ -95,25 +106,78 @@ void Cave::OptimizeGeometry()
     LOG(INFO) << "CAVE: Optimize for volume " << node->GetVolume()->GetName() << FairLogger::endl;
     /// outer radius for covering tube.
     Double_t params[4];
+    /// Get parameters of bounding cylinder. We only need the outer radius for the creation of the 
+    /// covering tube.
     node->GetVolume()->GetShape()->GetBoundingCylinder( params );
-    /// needed to create covering tube.
-    auto dZ = node->GetVolume()->GetShape()->GetDZ();
-    auto *daughterOrigin[3] = node->GetVolume()->GetShape()->GetOrigin();
-    /// Get TGeoMatrix to adjust relative positions wrt cave origin
-    auto *daughterMatrix = node->GetMatrix();
-    daughterMatrix->LocalToMaster( 
+    /// Outer radius of daughter, apparently bounding cylinder returns the squared radius... 
+    Double_t daughterDR = TMath::Sqrt(params[1]);
+    Double_t caveDR = caveShape->GetRmax();
+    Double_t newDR = caveDR;
+    /// dZ extension of current node. Need to call this from TGeoBBox since TGeoShape does not implement this.
+    TGeoBBox* daughterBox = (TGeoBBox*)node->GetVolume()->GetShape();
+    Double_t daughterDZ = daughterBox->GetDZ();
+    Double_t caveDZ = caveShape->GetDZ();
+    Double_t newDZ = caveDZ;
+    /// In general, the daughter shaopa can have an origin different from O w.r.t. the master frame.
+    const Double_t* daughterOriginLocal = daughterBox->GetOrigin();
+    
+    /// More general transformations of the daughter volume within the mother volume are encoded here.
+    TGeoTranslation *daughterMatrix = (TGeoTranslation*)node->GetMatrix();
+    /// 
+    Double_t daughterOriginMaster[3];
+    daughterMatrix->LocalToMaster( daughterOriginLocal, daughterOriginMaster );
+    LOG(INFO) << "Origin in Cave, x = " << daughterOriginMaster[0]
+                            << ", y = " << daughterOriginMaster[1]
+                            << ", z = " << daughterOriginMaster[2];
+
+    /// Is the volume contained the one we already have?
+    /// Here, a few checks are necessary and possible rotations/translations encoded in the TGeoMatrix of the 
+    /// node might be important. The shape itself does not know about this so we need to combine shape 
+    /// information with those provided by the matrix.
+    bool modify = false;
+
+    LOG(INFO) << "Cave dZ = " << caveDZ << FairLogger::endl;
+    LOG(INFO) << "Cave dR = " << caveDR << FairLogger::endl;
+    LOG(INFO) << "Daughter dZ = " << daughterDZ << FairLogger::endl;
+    LOG(INFO) << "Daughter dR = " << daughterDR << FairLogger::endl;
+    /// At this point assuming that tubes are aligned parrallel to each other, so we only care when the dZ
+    /// boundaries of the daughter node exceed the mother volume's ones or when the radius exceeds.
+    /// @todo Make this more general.
+    Double_t maxDZ;
+    if( ( daughterOriginMaster[2] + daughterDZ ) > ( TMath::Abs( daughterOriginMaster[2] - daughterDZ ) ) )
+    {
+      maxDZ = daughterOriginMaster[2] + daughterDZ;
+    }
+    else
+    {
+      maxDZ = TMath::Abs( daughterOriginMaster[2] - daughterDZ );
+    }
+    /// Now checking the radius...
+    /// First, get maximum radius
+    Double_t maxDR = TMath::Sqrt( daughterOriginMaster[0]*daughterOriginMaster[0] + 
+                                 daughterOriginMaster[1]*daughterOriginMaster[1] ) +
+                         daughterDR;
 
 
-    auto *tube = new TGeoTube( 0, params[1], dZ );
-    tube->SetBowDimensions( tube->GetDX, tube->GetDY, tube->GetDZ, 
-    cylinders->Add( new TGeoCylinder( 0, params[1], dZ,  ) );
-
-  }
-  
-
-
-  cavevol->SetShape( newShape )
-
+    if( maxDZ > caveDZ )
+    {
+      newDZ = maxDZ;
+      modify = true;
+    }
+    if( maxDR > caveDR )
+    {
+      newDR = maxDR;
+      modify = true;
+    }
+    if( modify )
+    {
+      caveShape->SetTubeDimensions( 0., newDR, newDZ );
+      /// @note this is not done implicitly in TGeoTube::SetTubeDimensions. On the other hand, 
+      /// TGeoTube::TGeoTube calls this method. So, in order to keep everything clean, we do it here
+      /// as well.
+      caveShape->ComputeBBox();
+    }
+  } // End loop over daughters.
 
 }
 

@@ -9,6 +9,8 @@
 // or submit itself to any jurisdiction.
 
 #include "build_geometry.C"
+// Cave optimisation
+#include "draw_geometry.C"
 #if !defined(__CLING__) || defined(__ROOTCLING__)
 #include <FairBoxGenerator.h>
 #include <FairPrimaryGenerator.h>
@@ -94,6 +96,8 @@ void o2sim()
   run->Init();
   finalize_geometry(run);
   gGeoManager->Export("O2geometry.root");
+  /// Draw the thing
+  draw_geometry();
 
   std::time_t runStart = std::time(nullptr);
 
@@ -161,4 +165,7 @@ void o2sim()
   std::cout << "Macro finished succesfully.\n";
   std::cout << "Real time " << rtime << " s, CPU time " << ctime << "s\n";
   std::cout << "Memory used " << sysinfo.GetMaxMemory() << " MB\n";
+
+
 }
+
