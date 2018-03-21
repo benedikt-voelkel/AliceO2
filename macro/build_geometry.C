@@ -78,7 +78,15 @@ void build_geometry(FairRunSim* run = nullptr)
 
   // Create geometry
   // we always need the gave
-  o2::Passive::Cave* cave = new o2::Passive::Cave("CAVE");
+  // @note this is now a hack to change between optimisation and the conservative BOX approach of the cave
+  /// default is now not to optimise
+  bool optimizeCave = false;
+  if( getenv("CAVEOPT") )
+  {
+    optimizeCave = true;
+  }
+
+  o2::Passive::Cave* cave = new o2::Passive::Cave("CAVE", "Exp Cave", optimizeCave);
   // the experiment hall (cave)
   cave->SetGeometryFileName("cave.geo");
   run->AddModule(cave);

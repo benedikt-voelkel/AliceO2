@@ -43,7 +43,7 @@ namespace Passive {
 class Cave : public FairDetector
 {
   public:
-    Cave(const char* name, const char* Title="Exp Cave");
+    Cave(const char* name, const char* Title="Exp Cave", bool optmize=true);
     Cave();
     ~Cave() override;
     void ConstructGeometry() override;
@@ -69,6 +69,7 @@ class Cave : public FairDetector
     Cave& operator=(const Cave&);
 
     std::vector<std::function<void()>> mFinishPrimaryHooks; //!
+    bool mOptimize;
 
     ClassDefOverride(o2::Passive::Cave,1) //
 };
