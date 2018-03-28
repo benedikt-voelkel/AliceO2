@@ -9,8 +9,6 @@
 // or submit itself to any jurisdiction.
 
 #include "build_geometry.C"
-// Cave optimisation
-//#include "draw_geometry.C"
 #if !defined(__CLING__) || defined(__ROOTCLING__)
 #include <FairBoxGenerator.h>
 #include <FairPrimaryGenerator.h>
@@ -147,8 +145,6 @@ void o2sim()
     TFile grpF("o2sim_grp.root", "recreate");
     grpF.WriteObjectAny(&grp, grp.Class(), "GRP");
   }
-  /// draw the thing
-  //draw_geometry();
 
   // needed ... otherwise nothing flushed?
   delete run;
@@ -167,8 +163,6 @@ void o2sim()
   std::cout << "Memory used " << sysinfo.GetMaxMemory() << " MB\n";
 
 
-  /// Draw the thing
-  //draw_geometry("O2geometry.root");
 
 }
 

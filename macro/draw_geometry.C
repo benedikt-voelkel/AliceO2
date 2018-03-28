@@ -15,11 +15,27 @@ int colours[NCOLOURS] = { kPink-9, kRed-9, kRed-2, kCyan+3, kBlue+1,
                     kGreen+2, kGreen-5, kMagenta+2, kViolet+7, kOrange+1 };
 
 
-//void draw_geometry(const char* geomROOTFile )
-void draw_geometry()
+void colourNodes( TGeoNode* node, int colour )
+{
+  node->GetVolume()->SetLineColor( colour );
+  TIter next( node->GetNodes() );
+  TGeoNode* daughterNode = nullptr;
+  while( daughterNode = (TGeoNode*)next() )
+  {
+    if(!daughterNode)
+    {
+      continue;
+    }
+    colourNodes( daughterNode, colour );
+  }
+}
+
+void draw_geometry(const char* geomROOTFile )
+//void draw_geometry()
 {
   //geom = new TGeoManager( "world", "ALICE Detector" );
-  //gGeoManager->Import( geomROOTFile );
+  gGeoManager->ResetState();
+  gGeoManager->Import( geomROOTFile );
   std::string fileName;
   std::cout << "Draw Cave..." << std::endl;
   //gGeoManager->SetTopVisible();
@@ -27,8 +43,8 @@ void draw_geometry()
   TPad* pad = new TPad();
   pad->Draw();
   pad->cd();
-  gGeoManager->GetTopNode()->GetVolume()->SetLineColor(kBlack);
-  TGeoVolume::CreateDummyMedium();
+  //gGeoManager->GetTopNode()->GetVolume()->SetLineColor(kBlack);
+  //TGeoVolume::CreateDummyMedium();
 
 /*
   TGeoRotation* someMatRot = new TGeoRotation( "someMatRot", 70., 30., 0. );
@@ -48,9 +64,8 @@ void draw_geometry()
   TIter next( nodes );
   TGeoNode* node = nullptr;
   int colour = 0;
-  gGeoManager->SetVisOption(0);
-  gGeoManager->SetVisLevel(2);
   gGeoManager->SetTopVisible();
+  gGeoManager->GetTopNode()->GetVolume()->SetLineColor( kBlack );
   while( node = (TGeoNode*)next() )
   {
     if(!node)
@@ -58,8 +73,11 @@ void draw_geometry()
       continue;
     }
     //node->SetLineColor( colours[ colour++ % NCOLOURS ] );
-    node->GetVolume()->SetLineColor( colours[ colour++ % NCOLOURS ] );
+    colourNodes( node, colours[ colour++ % NCOLOURS ] );
+    //node->GetVolume()->SetLineColor( colours[ colour++ % NCOLOURS ] );
 
+
+    node->GetVolume()->SetVisibility(true);
     //node->GetVolume()->Draw("same");
     //node->GetVolume()->SetVisOnly();
     /// Gives segfault...
@@ -67,7 +85,7 @@ void draw_geometry()
     //fileName += "_";
     //fileName += node->GetName();
   }
-  gGeoManager->GetTopNode()->GetVolume()->Draw();
+  gGeoManager->GetTopNode()->Draw();
   fileName = "cave";
   if( getenv("CAVEOPT") )
   {
@@ -75,7 +93,7 @@ void draw_geometry()
   }
   TView* view = pad->GetView();
   //view->RotateView( 0., 90.);
-  view->ShowAxis();
+  //view->ShowAxis();
   pad->Update();
   //fileName = "cave" + fileName + ".png";
   fileName += ".png";

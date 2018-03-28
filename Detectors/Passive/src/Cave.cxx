@@ -71,7 +71,7 @@ void Cave::ConstructGeometry()
   if(mOptimize)
   {
     cavevol = gGeoManager->MakeTube("cave", gGeoManager->GetMedium("CAVE_Air"), 0., 1., 1.);
-    //cavevol = gGeoManager->MakeBox("cave", gGeoManager->GetMedium("CAVE_Air"), 0., 1., 1.);
+    //cavevol = gGeoManager->MakeBox("cave", gGeoManager->GetMedium("CAVE_Air"), 1., 1., 1.);
   }
   else
   {
@@ -81,130 +81,107 @@ void Cave::ConstructGeometry()
   gGeoManager->SetTopVolume(cavevol);
 }
 
+/*
+ * This method looks for the smallest tube covering all subdetectors. So far it is assumed that the 
+ * tubes are always aligned parallel to each other with arbitrary translations w.r.t. each other. A 
+ * more general covering shape may be a polycon. Also, rotations of the detector parts need to be 
+ * taken into account to generalise this code.
+ */
 void Cave::ModifyGeometry()
 {
-  if(true)
+  /// Only do modification if requested
+  if(mOptimize)
   {
-    return;
-  }
-  /// Nothing to do if cave should not be optimised.
-  if(!mOptimize)
-  {
-    return;
-  }
-  /*
-   * This method looks for the smallest tube covering all subdetectors. So far it is assumed that the 
-   * tubes are always aligned parallel to each other with arbitrary translations w.r.t. each other. A 
-   * more general covering shape may be a polycon. Also, rotations of the detector parts need to be 
-   * taken into account to generalise this code.
-   */
-  /// Pointer to cave node, shape and matrix.
-  TGeoNodeMatrix *caveNode = (TGeoNodeMatrix*)gGeoManager->GetTopNode();
-  TGeoVolume *caveVolume = caveNode->GetVolume();
-  TGeoTube *caveShape = (TGeoTube*)caveVolume->GetShape();
-  //TGeoBBox *caveShape = (TGeoBBox*)caveVolume->GetShape();
-  
-  Double_t maxDR = caveShape->GetRmax();
-  //Double_t maxDR = caveShape->GetDX();
-  //Double_t minZ = -caveShape->GetDz();
-  Double_t minZ = -caveShape->GetDZ();
-  Double_t maxZ = -minZ;
-  int nDaughters = 0;
-  int sumOriginZ = 0;
-  /// Get all daughter nodes and loop...
-  TIter next(caveNode->GetNodes());
-  TGeoNode* node = nullptr;
-  while( node = (TGeoNode*)next() )
-  {
-    LOG(INFO) << "CAVE: Optimize for volume " << node->GetVolume()->GetName() << FairLogger::endl;
-    /// preparing for outer radius for covering tube.
-    //Double_t params[4];
-    /// Compute bounding box which contains a tube and hence gives extrema of tube geometry
-    node->GetVolume()->GetShape()->ComputeBBox();
-                          
-    /// Get parameters of bounding cylinder. We only need the outer radius for the creation of the 
-    /// covering tube.
-    //node->GetVolume()->GetShape()->GetBoundingCylinder( params );
-    /// Outer radius of daughter, apparently bounding cylinder returns the squared radius... 
-    //Double_t daughterDR = TMath::Sqrt(params[1]);
-    /// dZ extension of current node. Need to call this from TGeoBBox since TGeoShape does not implement this.
-    /// We can be sure that all other shapes are derived from this since this is the way it's done.
-    TGeoBBox* daughterBox = (TGeoBBox*)node->GetVolume()->GetShape();
-    daughterBox->ComputeBBox();
-    Double_t daughterDX = daughterBox->GetDX();
-    Double_t daughterDY = daughterBox->GetDY();
-    Double_t daughterDZ = daughterBox->GetDZ();
-    /// In general, the daughter shaoesa can have an origin different from O w.r.t. the master frame.
-    const Double_t* daughterOriginLocal = daughterBox->GetOrigin();
+    /// Pointer to cave node, shape and matrix.
+    TGeoNodeMatrix *caveNode = static_cast<TGeoNodeMatrix*>(gGeoManager->GetTopNode());
+    TGeoTube *caveShape = static_cast<TGeoTube*>(caveNode->GetVolume()->GetShape());
     
-    /// More general transformations of the daughter volume within the mother volume are encoded in the 
-    /// translation and rotation matrices of the daughter.
-    TGeoTranslation *daughterTranslation = static_cast<TGeoTranslation*>(node->GetMatrix());
-    TGeoRotation *daughterRotation = static_cast<TGeoRotation*>(node->GetMatrix());
-    /// Prepare for actual orogin in master/cave volume.
-    Double_t daughterOriginMasterTmp[3];
-    Double_t daughterOriginMaster[3];
-    daughterTranslation->LocalToMaster( daughterOriginLocal, daughterOriginMasterTmp );
-    daughterRotation->LocalToMaster( daughterOriginMasterTmp, daughterOriginMaster );
-    /// Increment daughters and their origins.
-    sumOriginZ += daughterOriginMaster[2];
-    nDaughters++;
-    /// Find daughter edges.
-    /// Vectors carrying exceeding coordinates of edges
-    for( int i = 1; i < 3; i++ )
+    Double_t maxDR = caveShape->GetRmax();
+    Double_t minZ = -caveShape->GetDZ();
+    Double_t maxZ = -minZ;
+    int nDaughters = 0;
+    int sumOriginZ = 0;
+    /// Get all daughter nodes and loop...
+    TIter next(caveNode->GetNodes());
+    TGeoNode* node = nullptr;
+    while( node = (TGeoNode*)next() )
     {
-      for( int j = 1; j < 3; j++ )
+      LOG(INFO) << "CAVE: Optimize for volume " << node->GetVolume()->GetName() << FairLogger::endl;
+                            
+      /// We can be sure that all other shapes are derived from this since this is the way it's done.
+      TGeoBBox* daughterBox = static_cast<TGeoBBox*>(node->GetVolume()->GetShape());
+      /// Compute bounding box which contains a tube and hence gives extrema of tube geometry. Get dimensions.
+      daughterBox->ComputeBBox();
+      Double_t daughterDX = daughterBox->GetDX();
+      Double_t daughterDY = daughterBox->GetDY();
+      Double_t daughterDZ = daughterBox->GetDZ();
+
+      /// In general, the daughter shape can have an origin different from O w.r.t. its own frame.
+      const Double_t* daughterOriginLocal = daughterBox->GetOrigin();
+      /// translation and rotation matrices of the daughter.
+      TGeoTranslation *daughterTranslation = static_cast<TGeoTranslation*>(node->GetMatrix());
+      TGeoRotation *daughterRotation = static_cast<TGeoRotation*>(node->GetMatrix());
+      /// Prepare for actual origin in master/cave volume.
+      Double_t daughterOriginMasterTmp[3];
+      Double_t daughterOriginMaster[3];
+      /// Do transformation.
+      daughterTranslation->LocalToMaster( daughterOriginLocal, daughterOriginMasterTmp );
+      daughterRotation->LocalToMaster( daughterOriginMasterTmp, daughterOriginMaster );
+      /// Add origin Z value and increment number of daughter. Later the average is derived from that.
+      sumOriginZ += daughterOriginMaster[2];
+      nDaughters++;
+      /// Find daughter edges.
+      for( int i = 1; i < 3; i++ )
       {
-        for( int k = 1; k < 3; k++ )
+        for( int j = 1; j < 3; j++ )
         {
-          const Double_t x = daughterOriginMaster[0] + TMath::Power( -1, i )*daughterDX;
-          const Double_t y = daughterOriginMaster[1] + TMath::Power( -1, j )*daughterDY;
-          const Double_t z = daughterOriginMaster[2] + TMath::Power( -1, k )*daughterDZ;
-          /// Maximise/minimise Z
-          if( z < minZ )
+          for( int k = 1; k < 3; k++ )
           {
-            minZ = z;
-          }
-          if( z > maxZ )
-          {
-            maxZ = z;
-          }
-          /// Maximise R
-          /// @note This maxR is derived from bounding box edges so the resulting cylinder may/will have a larger
-          /// radius than the daughter cylinder. However, this is save in case the daughter volume is rotated 
-          /// such that edges exceed cylinder volume
-          if( TMath::Sqrt(x*x + y*y) > maxDR )
-          {
-            maxDR = TMath::Sqrt(x*x+y*y);
+            const Double_t x = daughterOriginMaster[0] + TMath::Power( -1, i )*daughterDX;
+            const Double_t y = daughterOriginMaster[1] + TMath::Power( -1, j )*daughterDY;
+            const Double_t z = daughterOriginMaster[2] + TMath::Power( -1, k )*daughterDZ;
+            /// Maximise/minimise Z
+            if( z < minZ )
+            {
+              minZ = z;
+            }
+            if( z > maxZ )
+            {
+              maxZ = z;
+            }
+            /// maxR is derived from bounding box edges so the resulting cylinder may have a larger
+            /// radius than the daughter cylinder.
+            if( TMath::Sqrt(x*x + y*y) > maxDR )
+            {
+              maxDR = TMath::Sqrt(x*x+y*y);
+            }
           }
         }
-      }
+      } // End loop over edges.
+      
+      
+    } // End loop over daughters.
+    
+    /// derive the minimum Z extension needed for the cave.
+    Double_t newCaveDZ = (maxZ - minZ)/2.;
+    /// Compute average Z shift for all daughters within new cave.
+    Double_t originZShift = sumOriginZ/nDaughters;
+    LOG(INFO) << "Modify cave to dR = " << maxDR << " and to dZ = " << maxZ;
+    caveShape->SetTubeDimensions( 0., maxDR, newCaveDZ );
+    /// Compute new bounding box.
+    caveShape->ComputeBBox();
+
+
+    /// Update global translation of all daughters by what we picked up before...
+    node = nullptr;
+    TIter nextNode(caveNode->GetNodes());
+    while( node = (TGeoNode*)nextNode() )
+    {
+      /// Get the original z position...
+      const Double_t* trans = node->GetMatrix()->GetTranslation();
+      node->GetMatrix()->SetDz( originZShift + trans[2] );
     }
-    
-    
-  } // End loop over daughters.
-
-  Double_t newCaveDZ = (maxZ - minZ)/2.;
-  Double_t originZShift = sumOriginZ/nDaughters;
-  LOG(INFO) << "Modify cave to dR = " << maxDR << " and to dZ = " << maxZ;
-  caveShape->SetTubeDimensions( 0., maxDR, newCaveDZ );
-  //caveShape->SetBoxDimensions( maxDR, maxDR, newCaveDZ );
-  /// @note this is not done implicitly in TGeoTube::SetTubeDimensions. On the other hand, 
-  /// TGeoTube::TGeoTube calls this method. So, in order to keep everything clean, we do it here
-  /// as well.
-  //caveShape->ComputeBBox();
-
-
-  /// Update global translation of all daughters by what we picked up before...
-  node = nullptr;
-  TIter nextNode(caveNode->GetNodes());
-  while( node = (TGeoNode*)nextNode() )
-  {
-    node->GetMatrix()->SetDz( originZShift );
-  }
-  //gGeoManager->OptimizeVoxels();
-  caveVolume->Voxelize("");
-  
+  } /// End if(mOptimize)
 }
 
 Cave::Cave() : FairDetector() {}

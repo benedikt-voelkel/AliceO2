@@ -9,14 +9,16 @@
 # Geant4 configuration macro for Example02
 # (called from Root macro Config.C)
 
-/mcVerbose/all 1
-/mcVerbose/runAction 1
-/mcVerbose/composedPhysicsList 1
-#/mcVerbose/trackManager 2
-#/run/verbose 0
+/mcVerbose/all 2 
+/mcVerbose/runAction 2
+/mcVerbose/composedPhysicsList 2
+/mcVerbose/trackManager 2
+/run/verbose 2
+/event/verbose 2
+/mcVerbose/eventAction 2
 
 #/control/cout/ignoreThreadsExcept 0
-#/tracking/verbose 1
+#/tracking/verbose 2
 
 /run/particle/applyCuts
 
