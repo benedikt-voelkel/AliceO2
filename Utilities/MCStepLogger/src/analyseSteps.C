@@ -80,6 +80,7 @@ void analyseSteps(const char *filename) {
  fetchData(sbranch, &steps);
  std::cerr << "steps " << steps->size() << "\n";
 
+ /*
  std::vector<o2::MagCallInfo> *calls = nullptr;
  fetchData(callbranch, &calls);
 
@@ -129,8 +130,19 @@ void analyseSteps(const char *filename) {
    volidTovolnameHist(voliduselesscallhist, tmp, lookup);
    printSortedMap(tmp,"USELESS PER VOLUME (sorted)", 30);
  }
-
-
+ */
+ // make heat map of steps in r-z plane
+ TH2D *histRZ = new TH2D( "stepsRZ", "stepsRZ", 100, -2000., 2000., 100, 0., 1000.);
+ histRZ->GetXaxis()->SetTitle("z");
+ histRZ->GetYaxis()->SetTitle("r");
+ TCanvas *c = new TCanvas( "canvasStepsRZ", "canvasStepsRZ" );
+ c->cd();
+ for( auto &st : *steps )
+ {
+   histRZ->Fill( st.z, TMath::Sqrt( st.x*st.x + st.y*st.y ) );
+ }
+ histRZ->Draw("colz");
+ c->SaveAs( "stepsRZ.eps" );
  //{
  //  std::map<std::string, float> tmp;
    //volidTovolnameHist(callratio, tmp, lookup);
