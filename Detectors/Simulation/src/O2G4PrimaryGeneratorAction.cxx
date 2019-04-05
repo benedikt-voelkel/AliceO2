@@ -1,13 +1,3 @@
-#include "O2G4PrimaryGeneratorAction.h"
-#include "TG4PrimaryGeneratorMessenger.h"
-#include "TG4RunManager.h"
-#include "TG4ParticlesManager.h"
-#include "TG4TrackManager.h"
-#include "TG4StateManager.h"
-#include "TG4UserIon.h"
-#include "TG4G3Units.h"
-#include "TG4Globals.h"
-
 #include <G4Event.hh>
 #include <G4ParticleTable.hh>
 #include <G4IonTable.hh>
@@ -16,6 +6,9 @@
 // Moved after Root includes to avoid shadowed variables
 // generated from short units names
 #include <G4SystemOfUnits.hh>
+
+#include "O2G4PrimaryGeneratorAction.h"
+
 
 //_____________________________________________________________________________
 O2G4PrimaryGeneratorAction::O2G4PrimaryGeneratorAction()
@@ -60,14 +53,14 @@ void O2G4PrimaryGeneratorAction::AddUserParticle(G4int pdgCode,
     G4cout << "Cannot find particle with PDG code " << pdgCode << G4endl;
     if(!fSkipUnknownParticles) {
       G4Exception("O2G4PrimaryGeneratorAction::AddUserParticle", "Run0031",
-                  FatalException, "Cannot find particle PDG code %i.", pdgCode);
+                  FatalException, "Cannot find particle PDG code.");
     }
     return;
   }
 
   auto currentVertex = fVertices.back();
   auto previousPosition = currentVertex->GetPosition();
-  auto previousTime = currentVertex->GetTime();
+  auto previousTime = currentVertex->GetT0();
 
   if ( position != previousPosition || time != previousTime ) {
     // Create a new vertex if needed
@@ -75,7 +68,6 @@ void O2G4PrimaryGeneratorAction::AddUserParticle(G4int pdgCode,
     // when event is deleted)
     currentVertex = new G4PrimaryVertex(position, time);
     fVertices.push_back(currentVertex);
-    event->AddPrimaryVertex(currentVertex);
   }
 
   // Create the primary particle from the given info
@@ -99,7 +91,7 @@ void O2G4PrimaryGeneratorAction::AddUserParticle(G4int pdgCode,
   */
 
   // Set polarization
-  primaryParticle->SetPolarization(polarization.X(), polarization.Y(), polarization.Z());
+  primaryParticle->SetPolarization(polarization.x(), polarization.y(), polarization.z());
 
   // Set weight
   primaryParticle->SetWeight(weight);

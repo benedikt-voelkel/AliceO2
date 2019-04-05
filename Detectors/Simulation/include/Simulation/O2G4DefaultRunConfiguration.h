@@ -18,6 +18,10 @@
 
 #include <memory>
 
+#include "TG4RootNavMgr.h"
+#include "TG4RootNavigator.h"
+
+#include "VO2G4RunConfiguration.h"
 
 class G4VUserDetectorConstruction;
 class G4VUserPrimaryGeneratorAction;
@@ -27,6 +31,8 @@ class G4UserEventAction;
 class G4UserStackingAction;
 class G4RunManager;
 class G4UImessenger;
+
+class TG4RootDetectorConstruction;
 
 /// \ingroup run
 /// \brief Takes care of creating Geant4 user action classes using VMC
@@ -63,8 +69,6 @@ class G4UImessenger;
 ///
 /// \author I. Hrivnacova; IPN, Orsay
 
-enum class EGeometryConstructionType {kNONE, kROOT, kNATIVE};
-
 class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
 {
   public:
@@ -72,9 +76,8 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
     virtual ~O2G4DefaultRunConfiguration() = default;
 
     /// Not implemented
-    O2G4DefaultRunConfiguration() = delete;
-    O2G4DefaultRunConfiguration(const O2G4RunConfiguration&) = delete;
-    O2G4DefaultRunConfiguration& operator=(const O2G4RunConfiguration&) = delete;
+    O2G4DefaultRunConfiguration(const O2G4DefaultRunConfiguration&) = delete;
+    O2G4DefaultRunConfiguration& operator=(const O2G4DefaultRunConfiguration&) = delete;
 
     //
     // methods
@@ -83,6 +86,7 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
     //
     // inherited
     //
+    EExitStatus Initialize() override final;
 
 
   protected:
@@ -119,8 +123,11 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
     //Bool_t   IsMTApplication() const;
 
   protected:
-    G4VUserDetectorConstruction* fDetectorConstruction;
-    G4G4VUserPhysicsList* fPhysicsList;
+    TG4RootDetectorConstruction* fDetectorConstruction;
+    G4VUserPhysicsList* fPhysicsList;
+    std::unique_ptr<TG4RootNavMgr> fRootNavMgr;
+    TGeoManager* fGeoManager;
+
 
     //TString        fPhysicsListSelection;   ///< physics list selection
     //TString        fSpecialProcessSelection;///< special process selection

@@ -20,6 +20,8 @@
 #include <G4UserRunAction.hh>
 #include <globals.hh>
 
+#include "O2SimInterface.h"
+
 class G4Timer;
     // in order to avoid the odd dependency for the
     // times system function this declaration must be the first
@@ -31,7 +33,7 @@ class G4Run;
 ///
 /// \author I. Hrivnacova; IPN, Orsay
 
-class O2G4RunAction : public G4UserO2G4RunAction, public O2SimInterface
+class O2G4RunAction : public G4UserRunAction, public O2SimInterface
 {
   public:
     O2G4RunAction();
@@ -41,10 +43,10 @@ class O2G4RunAction : public G4UserO2G4RunAction, public O2SimInterface
     O2G4RunAction& operator=(const O2G4RunAction&) = delete;
 
     // methods
-    void BeginOfO2G4RunAction(const G4Run* run) override final;
-    void EndOfO2G4RunAction(const G4Run* run) override final;
+    void BeginOfRunAction(const G4Run* run) override final;
+    void EndOfRunAction(const G4Run* run) override final;
 
-    void Initialize() override final;
+    EExitStatus Initialize() override final;
 
     // set methods
     //void SetSaveRandomStatus(G4bool saveRandomStatus);

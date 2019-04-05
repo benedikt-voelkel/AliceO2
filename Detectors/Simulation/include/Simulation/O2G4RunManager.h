@@ -4,35 +4,37 @@
 #include <memory>
 #include <vector>
 
-#define PARENT_CLASS G4RunManagerMT
 #ifdef G4MULTITHREADED
 #include "G4RunManagerMT.hh"
+//#define PARENT_CLASS G4RunManagerMT
 #else
 #include "G4RunManager.hh"
-#define PARENT_CLASS G4RunManager
+//#define PARENT_CLASS G4RunManager
 #endif
 
+#include <G4Navigator.hh>
+
+#include "O2SimInterface.h"
+#include "VO2G4RunConfiguration.h"
 
 
 class G4VisExecutive;
 
-
-/// \ingroup run
-/// \brief Implementation of the TVirtualMC interface for Geant4.
-///
-/// \author I. Hrivnacova; IPN, Orsay
-
-class O2G4RunManager : public PARENT_CLASS, public O2SimInterface
+#ifdef G4MULTITHREADED
+class O2G4RunManager : public G4RunManagerMT
+#else
+class O2G4RunManager : public G4RunManager
+#endif
 {
   public:
-    O2G4RunManager(VO2G4RunConfiguration* configuration, int argc = 0, char** argv = 0);
+    O2G4RunManager(VO2G4RunConfiguration* configuration);
     virtual ~O2G4RunManager() = default;
 
     O2G4RunManager() = delete;
     O2G4RunManager(const O2G4RunManager&) = delete;
     O2G4RunManager& operator=(const O2G4RunManager&) = delete;
 
-    void Initialize() override final;
+    void RegisterNavigator(G4Navigator* userNavigator);
 
     //
     // Config
@@ -46,9 +48,9 @@ class O2G4RunManager : public PARENT_CLASS, public O2SimInterface
     //
 
   private:
-    // set geometry from Root (built via TGeo)
-    void SetGeometryInterface(VO2G4GeometryInterface* geometryInterface);
     std::vector<std::unique_ptr<G4Navigator>> fUserNavigators;
+    /// That is owned by the user
+    VO2G4RunConfiguration* fRunConfiguration;
 
 };
 

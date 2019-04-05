@@ -49,6 +49,7 @@ private:
    static TG4RootNavMgr *fgMasterInstance;
 
 public:
+   static TG4RootNavMgr *GetInstance(TGeoManager *geom, TG4RootDetectorConstruction *detConstruction=0);
    static TG4RootNavMgr *GetInstance(TGeoManager *geom=0);
    static TG4RootNavMgr *GetInstance(const TG4RootNavMgr& navMgr);
    static TG4RootNavMgr *GetMasterInstance();

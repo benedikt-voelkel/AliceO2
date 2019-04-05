@@ -4,14 +4,17 @@
 #include <G4UserEventAction.hh>
 #include <globals.hh>
 
+#include "O2SimInterface.h"
+
 class G4Event;
+class O2G4TrackingAction;
 
 /// \ingroup event
 /// \brief Actions at the beginning and the end of event.
 ///
 /// \author I. Hrivnacova; IPN, Orsay
 
-class O2G4EventAction : public G4UserO2G4EventAction, public O2SimInterface
+class O2G4EventAction : public G4UserEventAction, public O2SimInterface
 {
   public:
     O2G4EventAction();
@@ -24,10 +27,10 @@ class O2G4EventAction : public G4UserO2G4EventAction, public O2SimInterface
 
     // methods
     //void LateInitialize();
-    void BeginOfO2G4EventAction(const G4Event* event) override final;
-    void EndOfO2G4EventAction(const G4Event* event) override final;
+    void BeginOfEventAction(const G4Event* event) override final;
+    void EndOfEventAction(const G4Event* event) override final;
 
-    void Initialize() override final;
+    EExitStatus Initialize() override final;
 
     // set methods
     //void SetMCStack(TVirtualMCStack*  mcStack);
@@ -45,7 +48,7 @@ class O2G4EventAction : public G4UserO2G4EventAction, public O2SimInterface
     //O2G4EventActionMessenger   fMessenger; ///< messenger
 
     /// Cached pointer to thread-local tracking action
-    TrackingAction*  fTrackingAction;
+    O2G4TrackingAction*  fTrackingAction;
 
     /// Control for printing memory usage
     //G4bool  fPrintMemory;

@@ -91,6 +91,24 @@ TG4RootNavMgr *TG4RootNavMgr::GetInstance(TGeoManager *geom)
 }
 
 //______________________________________________________________________________
+TG4RootNavMgr *TG4RootNavMgr::GetInstance(TGeoManager *geom,
+                             TG4RootDetectorConstruction *detConstruction)
+{
+/// Get the pointer to the singleton. If none, create one based on 'geom'.
+   if (fRootNavMgr) return fRootNavMgr;
+   // Check if we have to create one.
+   if (!geom) return nullptr;
+   fRootNavMgr = new TG4RootNavMgr(geom, detConstruction);
+   G4bool isMaster = ! G4Threading::IsWorkerThread();
+   Printf("isMaster=%d", isMaster);
+
+   if ( isMaster ) {
+    fgMasterInstance = fRootNavMgr;
+   }
+   return fRootNavMgr;
+}
+
+//______________________________________________________________________________
 TG4RootNavMgr *TG4RootNavMgr::GetInstance(const TG4RootNavMgr& navMgr)
 {
 /// Get the pointer to the singleton. If none, create one based on 'geom'.

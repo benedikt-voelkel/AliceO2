@@ -1,9 +1,8 @@
+#include "G4Run.hh"
+#include "G4AutoLock.hh"
+#include "G4Timer.hh"
+
 #include "O2G4RunAction.h"
-
-#include <G4Run.hh>
-#include <G4AutoLock.hh>
-#include <G4Timer.hh>
-
 // mutex in a file scope
 
 #ifdef G4MULTITHREADED

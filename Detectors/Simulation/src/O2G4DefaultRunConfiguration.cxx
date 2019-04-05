@@ -1,34 +1,32 @@
 #include <G4MTRunManager.hh>
 #include <G4TransportationManager.hh>
+#include "FTFP_BERT.hh"
 
-#include "O2G4PrimaryGeneratorAction.h"
-#include "O2G4RunActionAction.h"
-#include "O2G4EventAction.h"
-#include "O2G4TrackingAction.h"
-#include "O2G4SteppingAction.h"
-
-#include "O2G4WorkerInitialization.h"
+#include "TGeoManager.h"
 
 //#include "O2G4DetectorConstruction.h"
 
 #include "TG4RootDetectorConstruction.h"
 
-#include "FTFP_BERT.hh"
-
+#include "O2G4PrimaryGeneratorAction.h"
+#include "O2G4RunAction.h"
+#include "O2G4EventAction.h"
+#include "O2G4TrackingAction.h"
+#include "O2G4SteppingAction.h"
 #include "O2G4DefaultRunConfiguration.h"
+#include "O2G4WorkerInitialization.h"
 
 
 O2G4DefaultRunConfiguration::O2G4DefaultRunConfiguration()
-  : VO2G4O2G4DefaultRunConfiguration(), fGeoManager(new TGeoManager()),
+  : VO2G4RunConfiguration(), fGeoManager(new TGeoManager()),
     fDetectorConstruction(new TG4RootDetectorConstruction(fGeoManager)),
-    fRootNavMgr(nullptr),
+    fRootNavMgr(TG4RootNavMgr::GetInstance(fGeoManager, fDetectorConstruction)),
     fPhysicsList(new FTFP_BERT())
 {
   fDetectorConstruction->ConstructRootGeometry();
-  fRootNavMgr = new TG4RootNavMgr(fGeoManager, fDetectorConstruction);
 }
 
-O2G4DefaultRunConfiguration::Initialize()
+EExitStatus O2G4DefaultRunConfiguration::Initialize()
 {
   #ifdef G4MULTITHREADED
   fRootNavMgr->Initialize(nullptr, G4MTRunManager::GetMasterRunManager()->GetNumberOfThreads());
@@ -36,7 +34,7 @@ O2G4DefaultRunConfiguration::Initialize()
   fRootNavMgr->Initialize(nullptr, 1);
   #endif
   fRootNavMgr->ConnectToG4();
-  return O2SimInterface::Initialize();
+  return VO2G4RunConfiguration::Initialize();
 }
 
 G4VUserDetectorConstruction* O2G4DefaultRunConfiguration::CreateDetectorConstruction() const
@@ -56,7 +54,7 @@ G4VUserPrimaryGeneratorAction* O2G4DefaultRunConfiguration::CreatePrimaryGenerat
 
 G4UserRunAction* O2G4DefaultRunConfiguration::CreateMasterRunAction() const
 {
-  return new O2G4RunActionAction();
+  return new O2G4RunAction();
 }
 
 G4UserRunAction* O2G4DefaultRunConfiguration::CreateWorkerRunAction() const
@@ -99,5 +97,5 @@ G4Navigator* O2G4DefaultRunConfiguration::CreateWorkerNavigatorForTracking() con
   // TODO Add mutex?!
   auto navMgr = new TG4RootNavMgr(*fRootNavMgr);
   navMgr->ConnectToG4();
-  return navMgr;
+  return navMgr->GetNavigator();
 }

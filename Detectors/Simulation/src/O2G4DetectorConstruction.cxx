@@ -1,23 +1,10 @@
-//------------------------------------------------
-// The Geant4 Virtual Monte Carlo package
-// Copyright (C) 2007 - 2014 Ivana Hrivnacova
-// All rights reserved.
-//
-// For the licensing terms see geant4_vmc/LICENSE.
-// Contact: root-vmc@cern.ch
-//-------------------------------------------------
+#include <G4VPhysicalVolume.hh>
 
-/// \file O2G4DetectorConstruction.cxx
-/// \brief Implementation of the O2G4DetectorConstruction class
-///
-/// \author I. Hrivnacova; IPN, Orsay
-
-#include "O2G4DetectorConstruction.h"
 #include "TG4GeometryManager.h"
 #include "TG4GeometryServices.h"
 #include "TG4Globals.h"
 
-#include <G4VPhysicalVolume.hh>
+#include "O2G4DetectorConstruction.h"
 
 //_____________________________________________________________________________
 O2G4DetectorConstruction::O2G4DetectorConstruction()

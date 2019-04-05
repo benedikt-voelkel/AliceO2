@@ -18,6 +18,10 @@
 
 #include <memory>
 
+#include <G4VUserActionInitialization.hh>
+
+#include "O2SimInterface.h"
+
 
 class G4VUserDetectorConstruction;
 class G4VUserPrimaryGeneratorAction;
@@ -25,8 +29,10 @@ class G4VUserPhysicsList;
 class G4UserRunAction;
 class G4UserEventAction;
 class G4UserStackingAction;
-class G4RunManager;
-class G4UImessenger;
+class G4UserTrackingAction;
+class G4UserSteppingAction;
+class G4UserWorkerInitialization;
+class G4Navigator;
 
 /// \ingroup run
 /// \brief Takes care of creating Geant4 user action classes using VMC
@@ -63,8 +69,6 @@ class G4UImessenger;
 ///
 /// \author I. Hrivnacova; IPN, Orsay
 
-enum class EGeometryConstructionType {kNONE, kROOT, kNATIVE};
-
 class VO2G4RunConfiguration : public G4VUserActionInitialization, public O2SimInterface
 {
   public:
@@ -72,7 +76,6 @@ class VO2G4RunConfiguration : public G4VUserActionInitialization, public O2SimIn
     virtual ~VO2G4RunConfiguration() = default;
 
     /// Not implemented
-    VO2G4RunConfiguration() = delete;
     VO2G4RunConfiguration(const VO2G4RunConfiguration&) = delete;
     VO2G4RunConfiguration& operator=(const VO2G4RunConfiguration&) = delete;
 
@@ -86,10 +89,11 @@ class VO2G4RunConfiguration : public G4VUserActionInitialization, public O2SimIn
     void BuildForMaster() const override final;
     void Build() const override final;
 
-    EExitStatus Initialize() override final;
+    virtual EExitStatus Initialize() override;
 
 
   protected:
+    friend class O2G4RunManager;
     virtual G4VUserDetectorConstruction* CreateDetectorConstruction() const = 0;
     virtual G4VUserPhysicsList* CreatePhysicsList() const = 0;
 
@@ -103,7 +107,8 @@ class VO2G4RunConfiguration : public G4VUserActionInitialization, public O2SimIn
 
     virtual G4UserWorkerInitialization* CreateWorkerInitialization() const {return nullptr;}
 
-    virtual G4Navigator* CreateNavigatorForTracking() const {return nullptr;}
+    virtual G4Navigator* CreateMasterNavigatorForTracking() const {return nullptr;}
+    virtual G4Navigator* CreateWorkerNavigatorForTracking() const {return nullptr;}
 
 
     //TG4VUserRegionConstruction*   CreateUserRegionConstruction();

@@ -1,12 +1,10 @@
 #ifndef O2G4_PRIMARY_GENERATOR_ACTION_H
 #define O2G4_PRIMARY_GENERATOR_ACTION_H
 
-#include "TG4Verbose.h"
-
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <globals.hh>
 
-class TG4PrimaryGeneratorMessenger;
+#include "O2SimInterface.h"
 
 class G4Event;
 
@@ -16,8 +14,7 @@ class G4Event;
 ///
 /// \author I. Hrivnacova; IPN, Orsay
 
-class O2G4PrimaryGeneratorAction : public G4VUserO2G4PrimaryGeneratorAction,
-                                   public O2SimInterface
+class O2G4PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction, public O2SimInterface
 {
   public:
     O2G4PrimaryGeneratorAction();
@@ -40,6 +37,7 @@ class O2G4PrimaryGeneratorAction : public G4VUserO2G4PrimaryGeneratorAction,
 
     /// Option to skip particles which do not exist in Geant4
     G4bool  fSkipUnknownParticles;
+    std::vector<G4PrimaryVertex*> fVertices;
 };
 
 // inline functions

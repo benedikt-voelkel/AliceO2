@@ -1,10 +1,11 @@
 #ifndef O2G4_STEPPING_ACTION_H
 #define O2G4_STEPPING_ACTION_H
-#include "O2G4SteppingActionMessenger.h"
 //#include "TG4GeoTrackManager.h"
 
 #include <globals.hh>
 #include <G4UserSteppingAction.hh>
+
+#include "O2SimInterface.h"
 
 /*
 class TG4SpecialControlsV2;
@@ -16,7 +17,7 @@ class TG4StackPopper;
 class G4Track;
 class G4Step;
 
-class O2G4SteppingAction : public G4UserO2G4SteppingAction, public O2SimInterface
+class O2G4SteppingAction : public G4UserSteppingAction, public O2SimInterface
 {
   enum {
     kMaxNofSteps = 30000,
@@ -33,8 +34,8 @@ class O2G4SteppingAction : public G4UserO2G4SteppingAction, public O2SimInterfac
     O2G4SteppingAction& operator=(const O2G4SteppingAction&) = delete;
 
     // methods
-    void Initialize() override final;
-    void UserO2G4SteppingAction(const G4Step* step) override final;
+    EExitStatus Initialize() override final;
+    void UserSteppingAction(const G4Step* step) override final;
 
     // set methods
     /*
@@ -61,12 +62,16 @@ class O2G4SteppingAction : public G4UserO2G4SteppingAction, public O2SimInterfac
     //static G4ThreadLocal O2G4SteppingAction*   fgInstance; ///< this instance
     //
     // methods
-    /*
+
     void ProcessTrackIfLooping(const G4Step* step);
+    /*
     void ProcessTrackIfOutOfRegion(const G4Step* step);
     void ProcessTrackIfBelowCut(const G4Step* step);
     void ProcessTrackOnBoundary(const G4Step* step);
     */
+  private:
+    G4int fLoopStepCounter;
+    G4int fMaxNofSteps;
 
 };
 

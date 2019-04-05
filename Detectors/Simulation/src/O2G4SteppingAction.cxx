@@ -1,10 +1,10 @@
-#include "O2G4SteppingAction.h"
-
 #include <G4Track.hh>
+
+#include "O2G4SteppingAction.h"
 
 //_____________________________________________________________________________
 O2G4SteppingAction::O2G4SteppingAction()
-  : G4UserO2G4SteppingAction(), O2SimInterface()
+  : G4UserSteppingAction(), O2SimInterface(),fLoopStepCounter(0), fMaxNofSteps(kMaxNofSteps)
 {
 }
 
@@ -23,7 +23,6 @@ void O2G4SteppingAction::ProcessTrackIfLooping(const G4Step* step)
   if ( fLoopStepCounter ) {
      if ( stepNumber == 1 ) {
         // reset parameters at beginning of tracking
-        fpSteppingManager->SetVerboseLevel(fStandardVerboseLevel);
         fLoopStepCounter = 0;
                   // necessary in case particle has reached fMaxNofSteps
                 // but has stopped before processing kMaxNofLoopSteps
@@ -37,26 +36,12 @@ void O2G4SteppingAction::ProcessTrackIfLooping(const G4Step* step)
          track->SetTrackStatus(fStopAndKill);
 
          // reset parameters back
-         fpSteppingManager->SetVerboseLevel(fStandardVerboseLevel);
          fLoopStepCounter = 0;
       }
     }
   }
-  else if ( stepNumber> fMaxNofSteps ) {
+  else if ( stepNumber > fMaxNofSteps ) {
 
-    // print looping info
-    if ( fLoopVerboseLevel > 0 ) {
-       G4cout << "*** Particle reached max step number ("
-              << fMaxNofSteps << "). ***" << G4endl;
-          if (fStandardVerboseLevel == 0) PrintTrackInfo(track);
-    }
-
-    // keep standard verbose level
-    if ( fStandardVerboseLevel < 0 )
-      fStandardVerboseLevel = fpSteppingManager->GetverboseLevel();
-
-    // set loop verbose level
-    fpSteppingManager->SetVerboseLevel(fLoopVerboseLevel);
 
     // start looping counter
     fLoopStepCounter++;
@@ -123,9 +108,9 @@ void O2G4SteppingAction::PrintTrackInfo(const G4Track* track) const
 //
 
 //_____________________________________________________________________________
-void O2G4SteppingAction::Initialize()
+EExitStatus O2G4SteppingAction::Initialize()
 {
-  return;
+  return O2SimInterface::Initialize();
 }
 
 //_____________________________________________________________________________

@@ -1,6 +1,6 @@
-#include "VO2G4RunConfiguration.h"
-
 #include <G4UImessenger.hh>
+
+#include "VO2G4RunConfiguration.h"
 /*
 #ifdef USE_VGM
 #include "TG4VGMMessenger.h"
@@ -11,6 +11,7 @@
 
 VO2G4RunConfiguration::VO2G4RunConfiguration()
   : G4VUserActionInitialization(), O2SimInterface()
+{}
 
 //_____________________________________________________________________________
 void VO2G4RunConfiguration::BuildForMaster() const

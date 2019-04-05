@@ -44,17 +44,17 @@ class O2G4WorkerInitialization : public G4UserWorkerInitialization
     // but geometry and physics have not been yet initialized. This situation
     // is identical to "PreInit" state in the sequential mode.
 
-    void WorkerRunStart() const override final
+    void WorkerRunStart() const override final;
     // This method is called before an event loop. Geometry and physics have
     // already been set up for the thread. All threads are synchronized and
     // ready to start the local event loop. This situation is identical to
     // "Idle" state in the sequential mode.
 
-    void WorkerRunEnd() const override final
+    void WorkerRunEnd() const override final;
     // This method is called for each thread, when the local event loop has
     // finished but before the synchronization over threads.
 
-    void WorkerStop() const override final
+    void WorkerStop() const override final;
     // This method is called once at the end of simulation job.
     // Implement here a clean up action.
 

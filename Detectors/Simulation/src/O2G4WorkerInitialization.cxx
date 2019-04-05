@@ -1,16 +1,4 @@
-//------------------------------------------------
-// The Geant4 Virtual Monte Carlo package
-// Copyright (C) 2014 Ivana Hrivnacova
-// All rights reserved.
-//
-// For the licensing terms see geant4_vmc/LICENSE.
-// Contact: root-vmc@cern.ch
-//-------------------------------------------------
-
-/// \file O2G4WorkerInitialization.cxx
-/// \brief Implementation of the O2G4WorkerInitialization class
-///
-/// \author I. Hrivnacova; IPN, Orsay
+#include <G4TransportationManager.hh>
 
 #include "O2G4WorkerInitialization.h"
 #include "O2G4RunManager.h"
@@ -56,9 +44,11 @@ void O2G4WorkerInitialization::WorkerStart() const
 {
   auto navigator = fRunConfiguration->CreateNavigatorForTracking();
   if(navigator) {
+    // For now let the user take care of this.
+    // TODO Provide interface in VO2G4RunConfiguration to register G4Navigators to be deleted
     G4TransportationManager::GetTransportationManager()->SetNavigatorForTracking(navigator);
-    dynamic_cast<O2G4RunManager*>(G4RunManager::GetRunManager())->RegisterNavigator(navigator);
-    
+    static_cast<O2G4RunManager*>(G4RunManager::GetRunManager())->RegisterNavigator(navigator);
+
   }
 }
 

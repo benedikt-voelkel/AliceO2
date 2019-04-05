@@ -28,7 +28,7 @@ find_package(Pythia6)
 guess_append_libpath(geant321 "${Geant3_DIR}")
 find_package(Geant3 NO_MODULE)
 guess_append_libpath(G4run "${Geant4_DIR}")
-find_package(Geant4 NO_MODULE)
+find_package(Geant4 NO_MODULE REQUIRED)
 guess_append_libpath(geant4vmc "${GEANT4_VMC_DIR}")
 find_package(Geant4VMC NO_MODULE)
 guess_append_libpath(BaseVGM "${VGM_DIR}")
@@ -613,6 +613,35 @@ o2_define_bucket(
     INCLUDE_DIRECTORIES
     ${ROOT_INCLUDE_DIR}
 )
+
+o2_define_bucket(
+    NAME
+    simulation_base_bucket
+
+    DEPENDENCIES
+    ${Geant4_LIBRARIES}
+    root_base_bucket
+    itsmft_base_bucket
+    its_simulation_bucket
+    mft_simulation_bucket
+    tpc_simulation_bucket
+    trd_simulation_bucket
+    tof_simulation_bucket
+    emcal_simulation_bucket
+    phos_simulation_bucket
+    fit_simulation_bucket
+    hmpid_simulation_bucket
+    zdc_simulation_bucket
+    data_format_simulation_bucket
+    mch_simulation_bucket
+    mid_simulation_bucket
+
+    INCLUDE_DIRECTORIES
+    ${CMAKE_SOURCE_DIR}/Detectors/Simulation/include/Simulation
+    ${Geant4_INCLUDE_DIRS}
+)
+
+
 
 o2_define_bucket(
     NAME

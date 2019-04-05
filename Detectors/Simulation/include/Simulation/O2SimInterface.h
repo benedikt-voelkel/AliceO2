@@ -1,10 +1,6 @@
 #ifndef O2_SIM_INTERFACE_H
 #define O2_SIM_INTERFACE_H
 
-#include <G4VUserDetectorConstruction.hh>
-
-class G4VPhysicalVolume;
-
 enum class EExitStatus {kSUCCESS, kFAIL, kUNKNOWN};
 
 class O2SimInterface
@@ -13,8 +9,8 @@ class O2SimInterface
     O2SimInterface() = default;
     virtual ~O2SimInterface() = default;
     /// Not implemented
-    O2G4DetectorConstruction(const O2G4DetectorConstruction&) = delete;
-    O2G4DetectorConstruction& operator=(const O2G4DetectorConstruction&) = delete;
+    O2SimInterface(const O2SimInterface&) = delete;
+    O2SimInterface& operator=(const O2SimInterface&) = delete;
 
     // methods
     virtual EExitStatus Initialize()
@@ -31,7 +27,7 @@ class O2SimInterface
     //void SlaveO2G4DetectorConstruction();
 
   private:
-    EExitStatus fLatestStatus = kUNKNOWN;
+    EExitStatus fLatestStatus = EExitStatus::kUNKNOWN;
     G4bool fIsInitialized = false;
     G4bool fIsFinalized = false;
 };
