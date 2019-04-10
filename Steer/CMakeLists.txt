@@ -12,7 +12,9 @@ set(HEADERS
   include/${MODULE_NAME}/InteractionSampler.h
   include/${MODULE_NAME}/HitProcessingManager.h
   include/${MODULE_NAME}/O2RunSim.h
+  include/${MODULE_NAME}/O2G4RunSim.h
   include/${MODULE_NAME}/O2MCApplication.h
+  include/${MODULE_NAME}/O2G4MCApplication.h
   include/${MODULE_NAME}/O2MCApplicationBase.h
 )
 

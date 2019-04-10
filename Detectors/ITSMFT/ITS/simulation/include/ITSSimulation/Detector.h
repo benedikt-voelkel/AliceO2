@@ -61,7 +61,7 @@ namespace ITS
 {
 class V3Layer;
 
-class Detector : public o2::base::DetImpl<Detector>
+class Detector : public o2::base::DetImpl<Detector>, public G4VSensitiveDetector
 {
  public:
   enum Model {

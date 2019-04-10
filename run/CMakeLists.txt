@@ -1,5 +1,6 @@
 Set(Exe_Names
   o2sim_serial
+  o2G4sim
   runTPC
   O2SimDeviceRunner
   O2PrimaryServerDeviceRunner
@@ -9,6 +10,7 @@ Set(Exe_Names
 
 Set(Exe_Source
   o2sim.cxx
+  o2G4sim.cxx
   runTPC.cxx
   O2SimDeviceRunner.cxx
   O2PrimaryServerDeviceRunner.cxx

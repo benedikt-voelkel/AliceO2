@@ -1,7 +1,12 @@
 #include <G4TransportationManager.hh>
+#include <G4PropagatorInField.hh>
+#include <G4EventManager.hh>
+#include <G4TrackingManager.hh>
+#include <G4SteppingManager.hh>
 
 #include "O2G4WorkerInitialization.h"
 #include "O2G4RunManager.h"
+#include "VO2G4RunConfiguration.h"
 
 /*
 #include <G4AutoLock.hh>
@@ -22,6 +27,7 @@ namespace {
 O2G4WorkerInitialization::O2G4WorkerInitialization(VO2G4RunConfiguration* runConfiguration)
   : G4UserWorkerInitialization(), fRunConfiguration(runConfiguration)
 {
+  std::cerr << "Constructed O2G4WorkerInitialization" << std::endl;
 /// Standard constructor
 }
 
@@ -42,14 +48,29 @@ void O2G4WorkerInitialization::WorkerInitialize() const
 
 void O2G4WorkerInitialization::WorkerStart() const
 {
-  auto navigator = fRunConfiguration->CreateNavigatorForTracking();
-  if(navigator) {
+
+  auto navigator = fRunConfiguration->CreateWorkerNavigatorForTracking();
+  if(!navigator) {
+    G4Exception("O2G4WorkerInitialization::WorkerStart",
+                "Run0012", FatalException,
+                "No navigator could be created created");
     // For now let the user take care of this.
     // TODO Provide interface in VO2G4RunConfiguration to register G4Navigators to be deleted
-    G4TransportationManager::GetTransportationManager()->SetNavigatorForTracking(navigator);
-    static_cast<O2G4RunManager*>(G4RunManager::GetRunManager())->RegisterNavigator(navigator);
+    //G4TransportationManager::GetTransportationManager()->SetNavigatorForTracking(navigator);
+
 
   }
+  auto runMgr = static_cast<O2G4RunManager*>(G4RunManager::GetRunManager());
+  runMgr->RegisterNavigator(navigator);
+  G4TransportationManager *trMgr = G4TransportationManager::GetTransportationManager();
+  trMgr->SetNavigatorForTracking(navigator);
+  G4FieldManager *fieldMgr = trMgr->GetPropagatorInField()->GetCurrentFieldManager();
+  if(fieldMgr) {
+    delete trMgr->GetPropagatorInField();
+  }
+  trMgr->SetPropagatorInField(new G4PropagatorInField(navigator, fieldMgr));
+  trMgr->ActivateNavigator(navigator);
+  G4EventManager::GetEventManager()->GetTrackingManager()->GetSteppingManager()->SetNavigator(navigator);
 }
 
 //_____________________________________________________________________________

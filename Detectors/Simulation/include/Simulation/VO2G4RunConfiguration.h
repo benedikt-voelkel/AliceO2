@@ -91,9 +91,6 @@ class VO2G4RunConfiguration : public G4VUserActionInitialization, public O2SimIn
 
     virtual EExitStatus Initialize() override;
 
-
-  protected:
-    friend class O2G4RunManager;
     virtual G4VUserDetectorConstruction* CreateDetectorConstruction() const = 0;
     virtual G4VUserPhysicsList* CreatePhysicsList() const = 0;
 
@@ -105,7 +102,7 @@ class VO2G4RunConfiguration : public G4VUserActionInitialization, public O2SimIn
     virtual G4UserSteppingAction* CreateSteppingAction() const {return nullptr;}
     virtual G4UserStackingAction* CreateStackingAction() const {return nullptr;}
 
-    virtual G4UserWorkerInitialization* CreateWorkerInitialization() const {return nullptr;}
+    virtual G4UserWorkerInitialization* CreateWorkerInitialization() {return nullptr;}
 
     virtual G4Navigator* CreateMasterNavigatorForTracking() const {return nullptr;}
     virtual G4Navigator* CreateWorkerNavigatorForTracking() const {return nullptr;}

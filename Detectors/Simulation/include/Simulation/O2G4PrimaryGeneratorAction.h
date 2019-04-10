@@ -3,16 +3,16 @@
 
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <globals.hh>
+#include <G4ThreeVector.hh>
+
+#include "Generators/PrimaryGenerator.h"
+#include "SimulationDataFormat/Stack.h"
+#include "SimulationDataFormat/MCEventHeader.h"
 
 #include "O2SimInterface.h"
 
 class G4Event;
-
-/// \ingroup run
-/// \brief Primary generator action defined via TVirtualMCStack
-/// and TVirtualMCApplication.
-///
-/// \author I. Hrivnacova; IPN, Orsay
+class G4PrimaryVertex;
 
 class O2G4PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction, public O2SimInterface
 {
@@ -33,11 +33,18 @@ class O2G4PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction, public 
     // get methods
     G4bool GetSkipUnknownParticles() const;
 
+    void SetPrimaryGenerator(FairPrimaryGenerator* primaryGenerator);
+
+  private:
+    void AttachPrimariesToEvent(G4Event* event);
+
   private:
 
     /// Option to skip particles which do not exist in Geant4
     G4bool  fSkipUnknownParticles;
-    std::vector<G4PrimaryVertex*> fVertices;
+    std::unique_ptr<o2::Data::Stack> fStack;
+    std::unique_ptr<o2::eventgen::PrimaryGenerator> fPrimaryGenerator;
+    std::unique_ptr<o2::dataformats::MCEventHeader> fEventHeader;
 };
 
 // inline functions
@@ -50,4 +57,4 @@ inline void O2G4PrimaryGeneratorAction::SetSkipUnknownParticles(G4bool value)
 inline  G4bool O2G4PrimaryGeneratorAction::GetSkipUnknownParticles() const
 { return fSkipUnknownParticles; }
 
-#endif // PRIMARY_GENERATOR_ACTION_H
+#endif // O2G4_PRIMARY_GENERATOR_ACTION_H

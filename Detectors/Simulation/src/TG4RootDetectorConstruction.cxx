@@ -33,6 +33,8 @@
 #include "TG4RootSolid.h"
 #include "TG4RootDetectorConstruction.h"
 
+#include "TVirtualMCApplication.h"
+
 //ClassImp(TG4RootDetectorConstruction)
 
 //______________________________________________________________________________
@@ -55,11 +57,11 @@ TG4RootDetectorConstruction::TG4RootDetectorConstruction(TGeoManager *geom)
                              fSDInit(0)
 {
 /// Default ctor.
-   if (!geom || !geom->IsClosed()) {
-      G4Exception("TG4RootDetectorConstruction::TG4RootDetectorConstruction",
-                  "G4Root_F001", FatalException,
-                  "Cannot create TG4RootDetectorConstruction without closed ROOT geometry !");
-   }
+  TVirtualMCApplication::Instance()->ConstructGeometry();
+  TGeoVolume *top = (TGeoVolume*)fGeometry->GetListOfVolumes()->First();
+  fGeometry->SetTopVolume(top);
+  fGeometry->CloseGeometry();
+  Construct();
 }
 
 //______________________________________________________________________________
@@ -136,6 +138,8 @@ void TG4RootDetectorConstruction::Initialize(TVirtualUserPostDetConstruction *sd
 G4VPhysicalVolume *TG4RootDetectorConstruction::Construct()
 {
 /// Main construct method.
+   // First construct via TVirtualMCApplication
+   // Now this assumes that the geometry is held by ROOT's TGeoManager
    if (!fGeometry || !fGeometry->IsClosed()) {
       G4Exception("TG4RootDetectorConstruction::Construct",
                   "G4Root_F001", FatalException,
@@ -147,10 +151,10 @@ G4VPhysicalVolume *TG4RootDetectorConstruction::Construct()
    CreateG4Materials();
 //   CreateG4LogicalVolumes();
    CreateG4PhysicalVolumes();
-   TG4RootNavMgr *navMgr = TG4RootNavMgr::GetInstance(fGeometry);
-   TG4RootNavigator *nav = navMgr->GetNavigator();
-   nav->SetDetectorConstruction(this);
-   nav->SetWorldVolume(fTopPV);
+   //TG4RootNavMgr *navMgr = TG4RootNavMgr::GetInstance(fGeometry);
+   //TG4RootNavigator *nav = navMgr->GetNavigator();
+   //nav->SetDetectorConstruction(this);
+   //nav->SetWorldVolume(fTopPV);
    G4cout << "### INFO: TG4RootDetectorConstruction::Construct() finished" << G4endl;
    fIsConstructed = kTRUE;
    return fTopPV;
@@ -159,9 +163,23 @@ G4VPhysicalVolume *TG4RootDetectorConstruction::Construct()
 //______________________________________________________________________________
 void TG4RootDetectorConstruction::ConstructSDandField()
 {
+  auto sdManager = G4SDManager::GetSDMpointer();
+  CreateSD("ITS")
+  static_cast<o2::ITS::Detector*> sd = TVirtualMCApplication::Instance()->ConstructGeometry()->GetDetector("ITS");
+
+  if(sd) {
+    sdManager->AddNewDetector(new o2::ITS::SensitiveDetector(sd));
+  }
+
   G4cout << "TG4RootDetectorConstruction::ConstructSDandField" << G4endl;
   if (fSDInit) fSDInit->InitializeSDandField();
   G4cout << "### INFO: TG4RootDetectorConstruction::ConstructSDandField finished" << G4endl;
+}
+
+void TG4RootDetectorConstruction::CreateSD(const G4string& name)
+{
+  auto vols = TVirtualMCApplication::Instance()->ConstructGeometry()->GetDetectorVolumes(name.c_str());
+
 }
 
 //______________________________________________________________________________

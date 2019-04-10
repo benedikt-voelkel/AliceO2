@@ -5,7 +5,7 @@
 #include <vector>
 
 #ifdef G4MULTITHREADED
-#include "G4RunManagerMT.hh"
+#include "G4MTRunManager.hh"
 //#define PARENT_CLASS G4RunManagerMT
 #else
 #include "G4RunManager.hh"
@@ -21,7 +21,7 @@
 class G4VisExecutive;
 
 #ifdef G4MULTITHREADED
-class O2G4RunManager : public G4RunManagerMT
+class O2G4RunManager : public G4MTRunManager
 #else
 class O2G4RunManager : public G4RunManager
 #endif

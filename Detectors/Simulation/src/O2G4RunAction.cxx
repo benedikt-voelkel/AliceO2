@@ -19,11 +19,13 @@ O2G4RunAction::O2G4RunAction()
     fTimer(new G4Timer),
     fRunID(-1)
 {
+  std::cerr << "Constructed O2G4RunAction" << std::endl;
 }
 
 //
 // public methods
 //
+
 
 //_____________________________________________________________________________
 void O2G4RunAction::BeginOfRunAction(const G4Run* run)

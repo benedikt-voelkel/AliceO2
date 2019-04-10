@@ -6,6 +6,7 @@
 O2G4SteppingAction::O2G4SteppingAction()
   : G4UserSteppingAction(), O2SimInterface(),fLoopStepCounter(0), fMaxNofSteps(kMaxNofSteps)
 {
+  std::cerr << "Constructed O2G4SteppingAction" << std::endl;
 }
 
 //

@@ -6,7 +6,9 @@
 #include "O2G4TrackingAction.h"
 
 O2G4TrackingAction::O2G4TrackingAction() : G4UserTrackingAction(), O2SimInterface()
-{}
+{
+  std::cerr << "Constructed O2G4TrackingAction" << std::endl;
+}
 
 //_____________________________________________________________________________
 EExitStatus O2G4TrackingAction::Initialize()

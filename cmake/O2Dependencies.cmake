@@ -29,6 +29,9 @@ guess_append_libpath(geant321 "${Geant3_DIR}")
 find_package(Geant3 NO_MODULE)
 guess_append_libpath(G4run "${Geant4_DIR}")
 find_package(Geant4 NO_MODULE REQUIRED)
+add_definitions(${Geant4_DEFINITIONS})
+include_directories(${Geant4_INCLUDE_DIRS})
+list(APPEND CMAKE_MODULE_PATH ${Geant4_DIR}/Modules)
 guess_append_libpath(geant4vmc "${GEANT4_VMC_DIR}")
 find_package(Geant4VMC NO_MODULE)
 guess_append_libpath(BaseVGM "${VGM_DIR}")
@@ -620,6 +623,8 @@ o2_define_bucket(
 
     DEPENDENCIES
     ${Geant4_LIBRARIES}
+    G4RayTracer
+    G4run
     root_base_bucket
     itsmft_base_bucket
     its_simulation_bucket
@@ -818,6 +823,7 @@ o2_define_bucket(
     itsmft_simulation_bucket
 
     DEPENDENCIES
+    ${Geant4_LIBRARIES}
     itsmft_base_bucket
     data_format_itsmft_bucket
     configuration_bucket
@@ -836,6 +842,7 @@ o2_define_bucket(
     ${CMAKE_SOURCE_DIR}/Detectors/Base/include
     ${CMAKE_SOURCE_DIR}/Detectors/ITSMFT/common/base/include
     ${CMAKE_SOURCE_DIR}/Common/SimConfig/include
+    ${Geant4_INCLUDE_DIRS}
 )
 
 o2_define_bucket(
@@ -1840,6 +1847,7 @@ o2_define_bucket(
     Generators
     DataFormatsParameters
     Framework
+    Simulation
 )
 
 # a bucket for "global" executables/macros

@@ -17,15 +17,12 @@
 
 #include <G4UserWorkerInitialization.hh>
 
-/// \ingroup run
-/// \brief Actions at start and end of run on a worker (call in MT mode only)
-///
-/// \author I. Hrivnacova; IPN, Orsay
+class VO2G4RunConfiguration;
 
 class O2G4WorkerInitialization : public G4UserWorkerInitialization
 {
   public:
-    O2G4WorkerInitialization();
+    O2G4WorkerInitialization(VO2G4RunConfiguration* runConfiguration);
     virtual ~O2G4WorkerInitialization();
 
     /// Not implemented
@@ -57,6 +54,9 @@ class O2G4WorkerInitialization : public G4UserWorkerInitialization
     void WorkerStop() const override final;
     // This method is called once at the end of simulation job.
     // Implement here a clean up action.
+
+  private:
+    VO2G4RunConfiguration* fRunConfiguration;
 
 };
 

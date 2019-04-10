@@ -167,6 +167,8 @@ void TG4RootNavMgr::SetNavigator(TG4RootNavigator *nav)
       Error("SetNavigator", "Navigator set after instantiation of G4RunManager. Won't set!!!");
       return;
    }
+   fNavigator = nav;
+   /*
    G4TransportationManager *trMgr = G4TransportationManager::GetTransportationManager();
 //   G4Navigator *oldNav = trMgr->GetNavigatorForTracking();
    trMgr->SetNavigatorForTracking(nav);
@@ -179,6 +181,7 @@ void TG4RootNavMgr::SetNavigator(TG4RootNavigator *nav)
    fNavigator = nav;
 //   trMgr->DeRegisterNavigator(oldNav);
    Info("SetNavigator", "TG4RootNavigator created and registered to G4TransportationManager");
+   */
 }
 
 //______________________________________________________________________________

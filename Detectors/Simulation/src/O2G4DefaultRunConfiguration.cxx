@@ -1,4 +1,8 @@
+#include <iostream>
+
+#ifdef G4MULTITHREADED
 #include <G4MTRunManager.hh>
+#endif
 #include <G4TransportationManager.hh>
 #include "FTFP_BERT.hh"
 
@@ -7,6 +11,7 @@
 //#include "O2G4DetectorConstruction.h"
 
 #include "TG4RootDetectorConstruction.h"
+#include "TG4RootNavigator.h"
 
 #include "O2G4PrimaryGeneratorAction.h"
 #include "O2G4RunAction.h"
@@ -18,22 +23,28 @@
 
 
 O2G4DefaultRunConfiguration::O2G4DefaultRunConfiguration()
-  : VO2G4RunConfiguration(), fGeoManager(new TGeoManager()),
-    fDetectorConstruction(new TG4RootDetectorConstruction(fGeoManager)),
-    fRootNavMgr(TG4RootNavMgr::GetInstance(fGeoManager, fDetectorConstruction)),
-    fPhysicsList(new FTFP_BERT())
+  : VO2G4RunConfiguration(), fPhysicsList(new FTFP_BERT())
 {
-  fDetectorConstruction->ConstructRootGeometry();
+  if(!gGeoManager) {
+    fGeoManager = new TGeoManager("TGeo", "Root geometry manager");
+  } else {
+    fGeoManager = gGeoManager;
+  }
+  fDetectorConstruction = new TG4RootDetectorConstruction(fGeoManager);
+  std::cerr << "O2G4DefaultRunConfiguration constructed" << std::endl;
 }
 
 EExitStatus O2G4DefaultRunConfiguration::Initialize()
 {
+  fDetectorConstruction->Initialize(nullptr);
+  G4int nthreads = 1;
+
   #ifdef G4MULTITHREADED
-  fRootNavMgr->Initialize(nullptr, G4MTRunManager::GetMasterRunManager()->GetNumberOfThreads());
-  #else
-  fRootNavMgr->Initialize(nullptr, 1);
+  nthreads = G4MTRunManager::GetMasterRunManager()->GetNumberOfThreads();
   #endif
-  fRootNavMgr->ConnectToG4();
+  if (nthreads > 1) {
+    gGeoManager->SetMaxThreads(nthreads);
+  }
   return VO2G4RunConfiguration::Initialize();
 }
 
@@ -82,20 +93,20 @@ G4UserStackingAction* O2G4DefaultRunConfiguration::CreateStackingAction() const
   return nullptr;
 }
 
-G4UserWorkerInitialization* O2G4DefaultRunConfiguration::CreateWorkerInitialization() const
+G4UserWorkerInitialization* O2G4DefaultRunConfiguration::CreateWorkerInitialization()
 {
-  return new O2G4WorkerInitialization();
+  return new O2G4WorkerInitialization(this);
 }
 
 G4Navigator* O2G4DefaultRunConfiguration::CreateMasterNavigatorForTracking() const
 {
-  return fRootNavMgr->GetNavigator();
+  std::cerr << "TG4RootNavMgr has been created on worker" << std::endl;
+  return new TG4RootNavigator(fDetectorConstruction);
 }
 
 G4Navigator* O2G4DefaultRunConfiguration::CreateWorkerNavigatorForTracking() const
 {
   // TODO Add mutex?!
-  auto navMgr = new TG4RootNavMgr(*fRootNavMgr);
-  navMgr->ConnectToG4();
-  return navMgr->GetNavigator();
+  std::cerr << "TG4RootNavMgr has been created on worker" << std::endl;
+  return new TG4RootNavigator(fDetectorConstruction);
 }

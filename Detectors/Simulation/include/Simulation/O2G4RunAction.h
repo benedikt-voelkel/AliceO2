@@ -46,8 +46,6 @@ class O2G4RunAction : public G4UserRunAction, public O2SimInterface
     void BeginOfRunAction(const G4Run* run) override final;
     void EndOfRunAction(const G4Run* run) override final;
 
-    EExitStatus Initialize() override final;
-
     // set methods
     //void SetSaveRandomStatus(G4bool saveRandomStatus);
     //void SetReadRandomStatus(G4bool readRandomStatus);

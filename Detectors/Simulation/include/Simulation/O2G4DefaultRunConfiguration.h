@@ -18,9 +18,6 @@
 
 #include <memory>
 
-#include "TG4RootNavMgr.h"
-#include "TG4RootNavigator.h"
-
 #include "VO2G4RunConfiguration.h"
 
 class G4VUserDetectorConstruction;
@@ -101,7 +98,7 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
     G4UserSteppingAction* CreateSteppingAction() const override final;
     G4UserStackingAction* CreateStackingAction() const override final;
 
-    G4UserWorkerInitialization* CreateWorkerInitialization() const override final;
+    G4UserWorkerInitialization* CreateWorkerInitialization() override final;
 
     G4Navigator* CreateMasterNavigatorForTracking() const override final;
     G4Navigator* CreateWorkerNavigatorForTracking() const override final;
@@ -125,7 +122,6 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
   protected:
     TG4RootDetectorConstruction* fDetectorConstruction;
     G4VUserPhysicsList* fPhysicsList;
-    std::unique_ptr<TG4RootNavMgr> fRootNavMgr;
     TGeoManager* fGeoManager;
 
 
