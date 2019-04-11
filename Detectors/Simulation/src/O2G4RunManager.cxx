@@ -24,6 +24,7 @@ O2G4RunManager::O2G4RunManager(VO2G4RunConfiguration* configuration)
     fRunConfiguration(configuration)
 {
 /// Standard constructor
+  SetVerboseLevel(2);
 
   // There might be some steps the user needs to do before everything is ready
   fRunConfiguration->Initialize();

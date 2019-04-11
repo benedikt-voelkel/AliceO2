@@ -3,6 +3,7 @@
 #include <G4EventManager.hh>
 #include <G4TrackingManager.hh>
 #include <G4SteppingManager.hh>
+#include <G4SDManager.hh>
 
 #include "O2G4WorkerInitialization.h"
 #include "O2G4RunManager.h"
@@ -56,6 +57,7 @@ void O2G4WorkerInitialization::WorkerStart() const
                 "No navigator could be created created");
   }
   auto runMgr = static_cast<O2G4RunManager*>(G4RunManager::GetRunManager());
+  runMgr->SetVerboseLevel(2);
   runMgr->RegisterNavigator(navigator);
   G4TransportationManager *trMgr = G4TransportationManager::GetTransportationManager();
   trMgr->SetNavigatorForTracking(navigator);
@@ -70,6 +72,10 @@ void O2G4WorkerInitialization::WorkerStart() const
   // and has taken the default G4Navigator from the G4TransportationManager during
   // construction ==> reset that
   G4EventManager::GetEventManager()->GetTrackingManager()->GetSteppingManager()->SetNavigator(navigator);
+  G4EventManager::GetEventManager()->SetVerboseLevel(2);
+  G4EventManager::GetEventManager()->GetTrackingManager()->SetVerboseLevel(2);
+  G4EventManager::GetEventManager()->GetTrackingManager()->GetSteppingManager()->SetVerboseLevel(2);
+  G4SDManager::GetSDMpointer()->SetVerboseLevel(2);
 }
 
 //_____________________________________________________________________________

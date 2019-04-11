@@ -7,12 +7,15 @@
 #include <G4VSensitiveDetector.hh>
 
 #include "G4LogicalVolume.hh"
+#include <G4VHit.hh>
+#include <G4THitsCollection.hh>
 
 #include "FairVolume.h"
 
 class FairDetector;
 class G4Step;
 class G4TouchableHistory;
+class G4HCofThisEvent;
 
 namespace o2
 {
@@ -42,14 +45,16 @@ class O2G4SensitiveDetector : public G4VSensitiveDetector
     //
     // inherited
     //
-  protected:
     G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist) override final;
+    void Initialize(G4HCofThisEvent* HCE);
 
 
   private:
     o2::base::Detector* fO2Detector;
     /// Lookup TGeoVolume from G4LogicalVolume
     std::map<G4LogicalVolume*, G4int> fG4LVTGeoVolumeIDMap;
+    G4THitsCollection<G4VHit>* fHitsCollection;
+    G4int fHCID;
 
 };
 

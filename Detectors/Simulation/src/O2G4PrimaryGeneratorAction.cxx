@@ -27,7 +27,9 @@ O2G4PrimaryGeneratorAction::O2G4PrimaryGeneratorAction()
     fEventHeader(new o2::dataformats::MCEventHeader())
 {
   o2::eventgen::GeneratorFactory::setPrimaryGenerator(o2::conf::SimConfig::Instance(), fPrimaryGenerator.get());
+  // NOTE That might be a hack at this point
   fPrimaryGenerator->SetEvent(fEventHeader.get());
+  fPrimaryGenerator->Init();
   std::cerr << "Constructed O2G4PrimaryGeneratorAction" << std::endl;
 }
 

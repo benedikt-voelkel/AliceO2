@@ -192,6 +192,7 @@ void TG4RootDetectorConstruction::ConstructSDandField()
     } else {
       g4sd = new O2G4SensitiveDetector(static_cast<o2::base::Detector*>(sd->CloneModule()));
       sdManager->AddNewDetector(g4sd);
+      g4sd->SetVerboseLevel(2);
       for (G4int i = 0; i < sd->svList->GetEntries(); i++) {
         auto fairVol = static_cast<FairVolume*>(sd->svList->At(i));
         if(!fairVol) {
@@ -223,6 +224,7 @@ void TG4RootDetectorConstruction::ConstructSDandField()
 
     g4sd = new O2G4SensitiveDetector(static_cast<o2::base::Detector*>(sd->CloneModule()));
     sdManager->AddNewDetector(g4sd);
+    g4sd->SetVerboseLevel(2);
     for (G4int i = 0; i < sd->vList->getEntries(); i++) {
       auto fairVol = static_cast<FairVolume*>(sd->vList->At(i));
       if(!fairVol) {

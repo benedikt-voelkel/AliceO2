@@ -1,15 +1,33 @@
 
 #include "DetectorsBase/Detector.h"
 
-#include  "G4Step.hh"
-#include  "G4TouchableHistory.hh"
+#include <G4Step.hh>
+#include <G4TouchableHistory.hh>
+#include <G4HCofThisEvent.hh>
+#include <G4SDManager.hh>
 
 #include "O2G4SensitiveDetector.h"
 
 //_____________________________________________________________________________
 O2G4SensitiveDetector::O2G4SensitiveDetector(o2::base::Detector* detector)
-  : G4VSensitiveDetector(detector->GetName()), fO2Detector(detector)
-{}
+  : G4VSensitiveDetector(detector->GetName()), fO2Detector(detector),
+    fHitsCollection(nullptr), fHCID(-1)
+{
+  G4String collName = SensitiveDetectorName + "_collection";
+  collectionName.insert( "hodoscopeColl");
+}
+
+
+
+void O2G4SensitiveDetector::Initialize(G4HCofThisEvent* hce)
+{
+  fHitsCollection = new G4THitsCollection<G4VHit>(SensitiveDetectorName, collectionName[0]);
+  if (fHCID<0) {
+    fHCID = G4SDManager::GetSDMpointer()->GetCollectionID(fHitsCollection);
+  }
+  hce->AddHitsCollection(fHCID,fHitsCollection);
+}
+
 
 G4bool O2G4SensitiveDetector::ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist)
 {
