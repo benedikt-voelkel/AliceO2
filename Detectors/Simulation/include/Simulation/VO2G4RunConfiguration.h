@@ -104,8 +104,7 @@ class VO2G4RunConfiguration : public G4VUserActionInitialization, public O2SimIn
 
     virtual G4UserWorkerInitialization* CreateWorkerInitialization() {return nullptr;}
 
-    virtual G4Navigator* CreateMasterNavigatorForTracking() const {return nullptr;}
-    virtual G4Navigator* CreateWorkerNavigatorForTracking() const {return nullptr;}
+    virtual G4Navigator* CreateNavigatorForTracking() const {return nullptr;}
 
 
     //TG4VUserRegionConstruction*   CreateUserRegionConstruction();

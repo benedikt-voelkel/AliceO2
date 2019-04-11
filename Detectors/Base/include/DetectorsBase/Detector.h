@@ -35,6 +35,16 @@
 #include <unistd.h>
 #include <cassert>
 
+#include <G4Step.hh>
+#include <G4TouchableHistory.hh>
+#include <TGeoVolume.h>
+#include <TGeoManager.h>
+#include <FairGeoNode.h>
+#include <FairVolume.h>
+#include <TString.h>
+#include <TRefArray.h>
+
+
 class FairMQParts;
 class FairMQChannel;
 
@@ -96,9 +106,15 @@ class Detector : public FairDetector
       return mDensityFactor;
     }
 
+    /// New ProcessHits
+    virtual bool ProcessHits(G4Step* aStep, G4int volID) {return false;}
+
+    //virtual bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist) {return false;}
+
+
     /// declare alignable volumes of detector
     virtual void addAlignableVolumes() const;
-    
+
     /// Sets per wrapper volume parameters
     virtual void defineWrapperVolume(Int_t id, Double_t rmin, Double_t rmax, Double_t zspan);
 
@@ -175,8 +191,31 @@ class Detector : public FairDetector
     {
       InitializeO2Detector();
       // make sure the basic initialization is also done
-      FairDetector::Initialize();
+      //FairDetector::Initialize();
+
+      // That is basically replaying what is done is FairDetector::Initialize();
+      // TODO Check whether getting the volID directly from the TGeoManager ois sufficient
+      Int_t NoOfEntries=svList->GetEntries();
+      Int_t fMCid;
+      FairGeoNode* fN;
+      TString cutName;
+      TString copysign="#";
+      for (Int_t i = 0 ; i < NoOfEntries ; i++ )  {
+        FairVolume* aVol = static_cast<FairVolume*>(svList->At(i));
+        cutName = aVol->GetName();
+        Ssiz_t pos = cutName.Index (copysign, 1);
+        if(pos>1) { cutName.Resize(pos); }
+        if ( aVol->getModId() == GetModId()  ) {
+          auto v = gGeoManager->GetVolume(cutName.Data());
+          if(v) {
+            aVol->setMCid(v->GetNumber());
+            fN=aVol->getGeoNode();
+            if (fN) { fN->setMCid(v->GetNumber()); }
+          }
+        }
+      }
     }
+
 
     // a second initialization method for stuff that should be initialized late
     // (in our case after forking off from the main simulation setup

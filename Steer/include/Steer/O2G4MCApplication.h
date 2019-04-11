@@ -119,6 +119,26 @@ class O2G4MCApplication : public FairMCApplication
 
     gGeoManager->RefreshPhysicalNodes(kFALSE);
 
+    FairModule* module;
+    FairDetector* detector;
+    TObject* obj;
+    fModIter->Reset();
+    while((obj=fModIter->Next())) {
+      detector=dynamic_cast<FairDetector*>(obj);
+      module=dynamic_cast<FairModule*>(obj);
+      //if(module) {
+      //  module->SetSpecialPhysicsCuts();
+      //}
+      if(detector) {
+        // check whether detector is active
+        if(detector->IsActive()) {
+          detector->Initialize();
+          detector->Register();
+        }
+      }
+    }
+    fModIter->Reset();
+
   }
 
 

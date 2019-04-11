@@ -38,6 +38,12 @@
 
 #include <cstdio> // for NULL, snprintf
 
+#include <G4SystemOfUnits.hh>
+#include <G4VTouchable.hh>
+#include <G4Track.hh>
+#include <G4VPhysicalVolume.hh>
+#include <G4ThreeVector.hh>
+
 class FairModule;
 
 class TGeoMedium;
@@ -349,6 +355,156 @@ Bool_t Detector::ProcessHits(FairVolume* vol)
   return kTRUE;
 }
 
+Bool_t Detector::ProcessHits(G4Step* aStep, G4int volID)
+{
+  G4cout << "######################## HIT in ITS ###################" << G4endl;
+  // /auto preStepPoint = aStep->GetPreStepPoint();
+  auto track = aStep->GetTrack();
+  // This method is called from the MC stepping
+  // That corresponds to what is done in TG4
+  if (!(track->GetDynamicParticle()->GetDefinition()->GetPDGCharge())) {
+    return kFALSE;
+  }
+
+  Int_t lay = 0;//, volID = vol->getMCid();
+
+  // FIXME: Determine the layer number. Is this information available directly from the FairVolume?
+  bool notSens = false;
+  while ((lay < sNumberLayers) && (notSens = (volID != mLayerID[lay]))) {
+    ++lay;
+  }
+  if (notSens)
+    return kFALSE; // RS: can this happen? This method must be called for sensors only?
+
+  // Is it needed to keep a track reference when the outer ITS volume is encountered?
+  /*
+  auto stack = (o2::Data::Stack*)fMC->GetStack();
+  if (fMC->IsTrackExiting() && (lay == 0 || lay == 6)) {
+    // Keep the track refs for the innermost and outermost layers only
+    o2::TrackReference tr(*fMC, GetDetId());
+    tr.setTrackID(stack->GetCurrentTrackNumber());
+    tr.setUserId(lay);
+    stack->addTrackReference(tr);
+  }
+  */
+  bool startHit = false, stopHit = false;
+  unsigned char status = 0;
+  /*
+  if (fMC->IsTrackEntering()) {
+    status |= Hit::kTrackEntering;
+  }
+  if (fMC->IsTrackInside()) {
+    status |= Hit::kTrackInside;
+  }
+  if (fMC->IsTrackExiting()) {
+    status |= Hit::kTrackExiting;
+  }
+  if (fMC->IsTrackOut()) {
+    status |= Hit::kTrackOut;
+  }
+  if (fMC->IsTrackStop()) {
+    status |= Hit::kTrackStopped;
+  }
+  if (fMC->IsTrackAlive()) {
+    status |= Hit::kTrackAlive;
+  }
+
+
+  // track is entering or created in the volume
+  if ((status & Hit::kTrackEntering) || (status & Hit::kTrackInside && !mTrackData.mHitStarted)) {
+    startHit = true;
+  } else if ((status & (Hit::kTrackExiting | Hit::kTrackOut | Hit::kTrackStopped))) {
+    stopHit = true;
+  }
+  */
+
+  // increment energy loss at all steps except entrance
+  if (!startHit)
+    mTrackData.mEnergyLoss += aStep->GetTotalEnergyDeposit()/GeV;
+  if (!(startHit | stopHit))
+    return kFALSE; // do noting
+
+  if (startHit) {
+    mTrackData.mEnergyLoss = 0.;
+    auto momentumStartG4 = track->GetMomentum()/GeV;
+    auto energyStartG4 = track->GetTotalEnergy()/GeV;
+    auto positionStartG4 = track->GetPosition()/cm;
+    auto tofStartG4 = track->GetGlobalTime()/s;
+
+    mTrackData.mMomentumStart.SetE(energyStartG4);
+    mTrackData.mMomentumStart.SetPx(momentumStartG4.x());
+    mTrackData.mMomentumStart.SetPy(momentumStartG4.y());
+    mTrackData.mMomentumStart.SetPz(momentumStartG4.z());
+
+    mTrackData.mPositionStart.SetT(tofStartG4);
+    mTrackData.mPositionStart.SetX(positionStartG4.x());
+    mTrackData.mPositionStart.SetY(positionStartG4.y());
+    mTrackData.mPositionStart.SetZ(positionStartG4.z());
+
+    mTrackData.mTrkStatusStart = status;
+    mTrackData.mHitStarted = true;
+  }
+  if (stopHit) {
+    auto positionStopG4 = track->GetPosition()/cm;
+    auto tofStopG4 = track->GetGlobalTime()/s;
+    TLorentzVector positionStop(positionStopG4.x(), positionStopG4.y(), positionStopG4.z(), tofStopG4);
+
+    //fMC->TrackPosition(positionStop);
+    // Retrieve the indices with the volume path
+    int stave(0), halfstave(0), chipinmodule(0), module;
+
+    G4VPhysicalVolume* mother = nullptr;
+    auto touchable = track->GetTouchable();
+    auto depth = touchable->GetHistoryDepth();
+
+    /// FIXME That is for now brute-force
+    if(depth >= 1) {
+      mother = touchable->GetVolume(1);
+      if(mother) {
+        // NOTE In TG4StepManager there is an additional offset which is different from 0 in case GEANT4 geometry is used
+        chipinmodule = mother->GetCopyNo();
+      }
+      if(depth >= 2) {
+        mother = touchable->GetVolume(2);
+        if(mother) {
+          // NOTE In TG4StepManager there is an additional offset which is different from 0 in case GEANT4 geometry is used
+          module = mother->GetCopyNo();
+        }
+        if(depth >= 3) {
+          mother = touchable->GetVolume(3);
+          if(mother) {
+            // NOTE In TG4StepManager there is an additional offset which is different from 0 in case GEANT4 geometry is used
+            halfstave = mother->GetCopyNo();
+          }
+        }
+        if(depth >= 4) {
+          mother = touchable->GetVolume(4);
+          if(mother) {
+            // NOTE In TG4StepManager there is an additional offset which is different from 0 in case GEANT4 geometry is used
+            stave = mother->GetCopyNo();
+          }
+        }
+      }
+    }
+    //fMC->CurrentVolOffID(1, chipinmodule);
+    //fMC->CurrentVolOffID(2, module);
+    //fMC->CurrentVolOffID(3, halfstave);
+    //fMC->CurrentVolOffID(4, stave);
+    int chipindex = mGeometryTGeo->getChipIndex(lay, stave, halfstave, module, chipinmodule);
+
+    Hit* p = addHit(track->GetTrackID()-1, chipindex, mTrackData.mPositionStart.Vect(), positionStop.Vect(),
+                    mTrackData.mMomentumStart.Vect(), mTrackData.mMomentumStart.E(), positionStop.T(),
+                    mTrackData.mEnergyLoss, mTrackData.mTrkStatusStart, status);
+    // p->SetTotalEnergy(vmc->Etot());
+
+    // RS: not sure this is needed
+    // Increment number of Detector det points in TParticle
+    //stack->addHit(GetDetId());
+  }
+
+  return kTRUE;
+}
+
 void Detector::createMaterials()
 {
   Int_t ifield = 2;
@@ -529,10 +685,10 @@ void Detector::Register()
   // This will create a branch in the output tree called Hit, setting the last
   // parameter to kFALSE means that this collection will not be written to the file,
   // it will exist only during the simulation
-
+/*
   if (FairRootManager::Instance()) {
     FairRootManager::Instance()->RegisterAny(addNameTo("Hit").data(), mHits, kTRUE);
-  }
+  }*/
 }
 
 void Detector::Reset()

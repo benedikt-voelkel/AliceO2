@@ -61,7 +61,7 @@ namespace ITS
 {
 class V3Layer;
 
-class Detector : public o2::base::DetImpl<Detector>, public G4VSensitiveDetector
+class Detector : public o2::base::DetImpl<Detector>
 {
  public:
   enum Model {
@@ -98,6 +98,9 @@ class Detector : public o2::base::DetImpl<Detector>, public G4VSensitiveDetector
 
   /// This method is called for each step during simulation (see FairMCApplication::Stepping())
   Bool_t ProcessHits(FairVolume* v = nullptr) override;
+
+  /// New PocessHits
+  Bool_t ProcessHits(G4Step* aStep, G4int volID) override;
 
   /// Registers the produced collections in FAIRRootManager
   void Register() override;

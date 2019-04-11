@@ -27,7 +27,7 @@ namespace {
 O2G4WorkerInitialization::O2G4WorkerInitialization(VO2G4RunConfiguration* runConfiguration)
   : G4UserWorkerInitialization(), fRunConfiguration(runConfiguration)
 {
-  std::cerr << "Constructed O2G4WorkerInitialization" << std::endl;
+  G4cout << "Constructed O2G4WorkerInitialization" << G4endl;
 /// Standard constructor
 }
 
@@ -49,27 +49,26 @@ void O2G4WorkerInitialization::WorkerInitialize() const
 void O2G4WorkerInitialization::WorkerStart() const
 {
 
-  auto navigator = fRunConfiguration->CreateWorkerNavigatorForTracking();
+  auto navigator = fRunConfiguration->CreateNavigatorForTracking();
   if(!navigator) {
     G4Exception("O2G4WorkerInitialization::WorkerStart",
                 "Run0012", FatalException,
                 "No navigator could be created created");
-    // For now let the user take care of this.
-    // TODO Provide interface in VO2G4RunConfiguration to register G4Navigators to be deleted
-    //G4TransportationManager::GetTransportationManager()->SetNavigatorForTracking(navigator);
-
-
   }
   auto runMgr = static_cast<O2G4RunManager*>(G4RunManager::GetRunManager());
   runMgr->RegisterNavigator(navigator);
   G4TransportationManager *trMgr = G4TransportationManager::GetTransportationManager();
   trMgr->SetNavigatorForTracking(navigator);
-  G4FieldManager *fieldMgr = trMgr->GetPropagatorInField()->GetCurrentFieldManager();
+  // TODO Taken from TG4: Why deleting and re-constructing the G4FieldManager?
+  G4FieldManager* fieldMgr = trMgr->GetPropagatorInField()->GetCurrentFieldManager();
   if(fieldMgr) {
     delete trMgr->GetPropagatorInField();
   }
   trMgr->SetPropagatorInField(new G4PropagatorInField(navigator, fieldMgr));
   trMgr->ActivateNavigator(navigator);
+  // At this stage the G4SteppingManager has been already created in this thread
+  // and has taken the default G4Navigator from the G4TransportationManager during
+  // construction ==> reset that
   G4EventManager::GetEventManager()->GetTrackingManager()->GetSteppingManager()->SetNavigator(navigator);
 }
 

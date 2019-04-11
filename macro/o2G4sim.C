@@ -27,6 +27,8 @@
 #include <unistd.h>
 #include <sstream>
 
+#include "DetectorsBase/Detector.h"
+
 #include "Steer/O2G4RunSim.h"
 #include "Steer/O2G4MCApplication.h"
 #include "Simulation/O2G4RunManager.h"
@@ -56,7 +58,7 @@ FairRunSim* o2sim_init(FairRunSim* run)
   //run->SetImportTGeoToVMC(false); // do not import TGeo to VMC since the latter is built together with TGeo
   //run->SetSimSetup([confref]() { o2::SimSetup::setup(confref.getMCEngine().c_str()); });
 
-  
+
 
   auto header = new o2::dataformats::MCEventHeader();
   run->SetMCEventHeader(header);
@@ -87,6 +89,18 @@ FairRunSim* o2sim_init(FairRunSim* run)
   run->Init();
   auto g4Config = new O2G4DefaultRunConfiguration();
   auto runManager = new O2G4RunManager(g4Config);
+  const TObjArray* modArr = run->GetListOfModules();
+  TIter next(modArr);
+  FairModule* module = nullptr;
+  while ((module = (FairModule*)next())) {
+    auto o2Det = dynamic_cast<o2::base::Detector*>(module);
+    if(!o2Det) {
+      LOG(WARNING) << "Could not cast to o2::base::Detector";
+      continue;
+    }
+    LOG(INFO) << "Added potential SD" << o2Det->GetName();
+    g4Config->AddPotentialSD(o2Det);
+  }
   runManager->Initialize();
   finalize_geometry(run);
 

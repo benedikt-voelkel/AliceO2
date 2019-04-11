@@ -12,6 +12,7 @@ set(SRCS
   src/O2G4SteppingAction.cxx
   src/O2G4TrackingAction.cxx
   src/O2G4WorkerInitialization.cxx
+  src/O2G4SensitiveDetector.cxx
   #src/O2G4DetectorConstruction.cxx
   src/O2SimInterface.cxx
   src/TG4RootNavMgr.cxx
@@ -31,6 +32,7 @@ Set(HEADERS
   include/${MODULE_NAME}/O2G4SteppingAction.h
   include/${MODULE_NAME}/O2G4TrackingAction.h
   include/${MODULE_NAME}/O2G4WorkerInitialization.h
+  include/${MODULE_NAME}/O2G4SensitiveDetector.h
   #include/${MODULE_NAME}/O2G4DetectorConstruction.h
   include/${MODULE_NAME}/O2SimInterface.h
   include/${MODULE_NAME}/TG4RootNavMgr.h

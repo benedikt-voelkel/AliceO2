@@ -18,6 +18,8 @@
 
 #include <memory>
 
+#include "DetectorsBase/Detector.h"
+
 #include "VO2G4RunConfiguration.h"
 
 class G4VUserDetectorConstruction;
@@ -30,6 +32,8 @@ class G4RunManager;
 class G4UImessenger;
 
 class TG4RootDetectorConstruction;
+
+class FairDetector;
 
 /// \ingroup run
 /// \brief Takes care of creating Geant4 user action classes using VMC
@@ -80,6 +84,8 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
     // methods
     //
 
+    void AddPotentialSD(o2::base::Detector* detector);
+
     //
     // inherited
     //
@@ -100,8 +106,7 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
 
     G4UserWorkerInitialization* CreateWorkerInitialization() override final;
 
-    G4Navigator* CreateMasterNavigatorForTracking() const override final;
-    G4Navigator* CreateWorkerNavigatorForTracking() const override final;
+    G4Navigator* CreateNavigatorForTracking() const override final;
 
     //TG4VUserRegionConstruction*   CreateUserRegionConstruction();
     //TG4VUserPostDetConstruction*  CreateUserPostDetConstruction();

@@ -8,6 +8,8 @@
 
 #include "TGeoManager.h"
 
+#include "FairModule.h"
+
 //#include "O2G4DetectorConstruction.h"
 
 #include "TG4RootDetectorConstruction.h"
@@ -98,15 +100,13 @@ G4UserWorkerInitialization* O2G4DefaultRunConfiguration::CreateWorkerInitializat
   return new O2G4WorkerInitialization(this);
 }
 
-G4Navigator* O2G4DefaultRunConfiguration::CreateMasterNavigatorForTracking() const
+G4Navigator* O2G4DefaultRunConfiguration::CreateNavigatorForTracking() const
 {
   std::cerr << "TG4RootNavMgr has been created on worker" << std::endl;
   return new TG4RootNavigator(fDetectorConstruction);
 }
 
-G4Navigator* O2G4DefaultRunConfiguration::CreateWorkerNavigatorForTracking() const
+void O2G4DefaultRunConfiguration::AddPotentialSD(o2::base::Detector* detector)
 {
-  // TODO Add mutex?!
-  std::cerr << "TG4RootNavMgr has been created on worker" << std::endl;
-  return new TG4RootNavigator(fDetectorConstruction);
+  fDetectorConstruction->AddPotentialSD(detector);
 }

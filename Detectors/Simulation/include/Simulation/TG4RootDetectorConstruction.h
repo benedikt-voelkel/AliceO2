@@ -35,7 +35,11 @@
 #include "TGeoNode.h"
 #endif
 
+
 #include <map>
+#include <vector>
+
+#include "DetectorsBase/Detector.h"
 
 class TObjArray;
 class TGeoManager;
@@ -107,6 +111,10 @@ private:
    typedef PVolumeMap_t::value_type                   PVolumeVal_t;
    PVolumeMap_t          fPVolumeMap; //!< map of TGeo volumes
 
+   /// Holding FairModules which could be sensitive
+   /// NOTE We don't know at this stage and this is for now a workaround
+   std::vector<o2::base::Detector*> fPotentialSDs;
+
 protected:
    Bool_t                fIsConstructed;   ///< flag Construct() called
    TGeoManager          *fGeometry;        ///< TGeo geometry manager
@@ -131,6 +139,8 @@ public:
 
    virtual G4VPhysicalVolume *Construct();
    virtual void               ConstructSDandField();
+
+   void AddPotentialSD(o2::base::Detector* detector);
 
    // Getters
                          /// Return TGeo geometry manager

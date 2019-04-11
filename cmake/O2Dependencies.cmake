@@ -640,10 +640,13 @@ o2_define_bucket(
     data_format_simulation_bucket
     mch_simulation_bucket
     mid_simulation_bucket
+    fairroot_base_bucket
+    DetectorsBase
 
     INCLUDE_DIRECTORIES
     ${CMAKE_SOURCE_DIR}/Detectors/Simulation/include/Simulation
     ${Geant4_INCLUDE_DIRS}
+    ${FAIRROOT_INCLUDE_DIR}
 )
 
 

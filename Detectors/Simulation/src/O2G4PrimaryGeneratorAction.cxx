@@ -35,6 +35,8 @@ O2G4PrimaryGeneratorAction::O2G4PrimaryGeneratorAction()
 // public methods
 //
 
+
+
 //_____________________________________________________________________________
 void O2G4PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 {

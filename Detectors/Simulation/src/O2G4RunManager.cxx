@@ -36,7 +36,7 @@ O2G4RunManager::O2G4RunManager(VO2G4RunConfiguration* configuration)
   SetUserInitialization(fRunConfiguration);
 
 
-  auto navigator = fRunConfiguration->CreateMasterNavigatorForTracking();
+  auto navigator = fRunConfiguration->CreateNavigatorForTracking();
   if(navigator) {
     G4TransportationManager::GetTransportationManager()->SetNavigatorForTracking(navigator);
     RegisterNavigator(navigator);

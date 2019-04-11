@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include <FairModule.h>
+
 #ifdef G4MULTITHREADED
 #include "G4MTRunManager.hh"
 //#define PARENT_CLASS G4RunManagerMT
