@@ -41,6 +41,8 @@
 
 #include "DetectorsBase/Detector.h"
 
+#include "FairModule.h"
+
 class TObjArray;
 class TGeoManager;
 class TGeoMaterial;
@@ -113,7 +115,11 @@ private:
 
    /// Holding FairModules which could be sensitive
    /// NOTE We don't know at this stage and this is for now a workaround
-   std::vector<o2::base::Detector*> fPotentialSDs;
+   //std::vector<o2::base::Detector*> fPotentialSDs;
+
+   std::map<o2::base::Detector*, std::map<G4LogicalVolume*, TGeoVolume*>> fSVMap;
+   std::vector<o2::base::Detector*> fSDs;
+   std::vector<FairModule*> fPassive;
 
 protected:
    Bool_t                fIsConstructed;   ///< flag Construct() called
@@ -132,15 +138,16 @@ protected:
    G4Material           *CreateG4Material(const TGeoMaterial *mat);
    G4RotationMatrix     *CreateG4Rotation(const TGeoMatrix *matrix);
 
+   void ExtractSensitiveVolumes(o2::base::Detector* detector);
+
 public:
    TG4RootDetectorConstruction();
    TG4RootDetectorConstruction(TGeoManager *geom);
    virtual ~TG4RootDetectorConstruction();
 
-   virtual G4VPhysicalVolume *Construct();
-   virtual void               ConstructSDandField();
+   G4VPhysicalVolume *Construct() override final;
+   void               ConstructSDandField() override final;
 
-   void AddPotentialSD(o2::base::Detector* detector);
 
    // Getters
                          /// Return TGeo geometry manager

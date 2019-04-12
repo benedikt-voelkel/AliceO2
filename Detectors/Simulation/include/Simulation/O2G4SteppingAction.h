@@ -72,6 +72,7 @@ class O2G4SteppingAction : public G4UserSteppingAction, public O2SimInterface
   private:
     G4int fLoopStepCounter;
     G4int fMaxNofSteps;
+    G4int fNSteps;
 
 };
 

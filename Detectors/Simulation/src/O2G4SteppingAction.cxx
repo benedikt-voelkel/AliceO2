@@ -4,7 +4,8 @@
 
 //_____________________________________________________________________________
 O2G4SteppingAction::O2G4SteppingAction()
-  : G4UserSteppingAction(), O2SimInterface(),fLoopStepCounter(0), fMaxNofSteps(kMaxNofSteps)
+  : G4UserSteppingAction(), O2SimInterface(),fLoopStepCounter(0), fMaxNofSteps(kMaxNofSteps),
+    fNSteps(0)
 {
   std::cerr << "Constructed O2G4SteppingAction" << std::endl;
 }
@@ -124,6 +125,14 @@ void O2G4SteppingAction::UserSteppingAction(const G4Step* step)
 
   // stop track if maximum number of steps has been reached
   ProcessTrackIfLooping(step);
+  fNSteps++;
+  if(fNSteps % 1000 == 0) {
+    G4cout << "DONE " << fNSteps << G4endl;
+  }
+  G4cout << "Step control flag is " << step->GetControlFlag() << G4endl;
+  G4cout << "Current volume at " << step->GetPreStepPoint()->GetPhysicalVolume() << G4endl;
+  G4cout << "SD at " << step->GetPreStepPoint()->GetSensitiveDetector() << G4endl;
+
 
   // update Root track if collecting tracks is activated
   //if ( fCollectTracks )

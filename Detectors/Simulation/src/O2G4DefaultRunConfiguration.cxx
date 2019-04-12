@@ -105,8 +105,3 @@ G4Navigator* O2G4DefaultRunConfiguration::CreateNavigatorForTracking() const
   std::cerr << "TG4RootNavMgr has been created on worker" << std::endl;
   return new TG4RootNavigator(fDetectorConstruction);
 }
-
-void O2G4DefaultRunConfiguration::AddPotentialSD(o2::base::Detector* detector)
-{
-  fDetectorConstruction->AddPotentialSD(detector);
-}

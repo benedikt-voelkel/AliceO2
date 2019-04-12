@@ -358,6 +358,9 @@ Bool_t Detector::ProcessHits(FairVolume* vol)
 Bool_t Detector::ProcessHits(G4Step* aStep, G4int volID)
 {
   G4cout << "######################## HIT in ITS ###################" << G4endl;
+  G4Exception("ODetector::ProcessHits",
+              "Run0012", FatalException,
+              "ProcessHits Exception");
   // /auto preStepPoint = aStep->GetPreStepPoint();
   auto track = aStep->GetTrack();
   // This method is called from the MC stepping

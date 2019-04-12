@@ -38,11 +38,10 @@ class O2G4RunManager : public G4RunManager
 
     void RegisterNavigator(G4Navigator* userNavigator);
 
-    //
-    // Config
-    //
-    G4bool IsMT() const;
-
+    G4bool IsGeometryInitialized() const
+    {
+      return geometryInitialized;
+    }
 
     //
     // methods for building/management of geometry

@@ -31,6 +31,8 @@
 #include "G4SystemOfUnits.hh"
 #include "G4SDManager.hh"
 
+#include "G4Threading.hh"
+
 #include "TG4RootNavMgr.h"
 #include "TList.h"
 #include "TG4RootNavigator.h"
@@ -40,6 +42,10 @@
 #include "FairVolumeList.h"
 
 #include "TVirtualMCApplication.h"
+
+#include "DetectorsPassive/Cave.h"
+#include "ITSSimulation/Detector.h"
+
 
 #include "O2G4SensitiveDetector.h"
 
@@ -65,10 +71,6 @@ TG4RootDetectorConstruction::TG4RootDetectorConstruction(TGeoManager *geom)
                              fSDInit(0)
 {
 /// Default ctor.
-  TVirtualMCApplication::Instance()->ConstructGeometry();
-  TGeoVolume *top = (TGeoVolume*)fGeometry->GetListOfVolumes()->First();
-  fGeometry->SetTopVolume(top);
-  fGeometry->CloseGeometry();
   Construct();
 }
 
@@ -142,9 +144,60 @@ void TG4RootDetectorConstruction::Initialize(TVirtualUserPostDetConstruction *sd
    }
 }
 
+void TG4RootDetectorConstruction::ExtractSensitiveVolumes(o2::base::Detector* detector)
+{
+  if(fSVMap.find(detector) != fSVMap.end()) {
+    G4cout << "WARNING: The SVs of SD " << detector->GetName() << " have already been extracted" << G4endl;
+    return;
+  }
+  if(detector->svList->GetEntries() == 0) {
+    G4cout << "No SVs found for module " << detector->GetName() << G4endl;
+    return;
+  }
+
+  for (G4int i = 0; i < detector->svList->GetEntries(); i++) {
+    auto fairVol = static_cast<FairVolume*>(detector->svList->At(i));
+    if(!fairVol) {
+      G4cout << "######### Cannot retrieve FairVolume in list with index " << i << G4endl;
+      continue;
+    }
+    auto tgeoVol = gGeoManager->GetVolume(fairVol->GetName());
+    if(!tgeoVol) {
+      G4cout << "######### Cannot find TGeoVolume for FairVolumeName " << fairVol->GetName() << G4endl;
+      continue;
+    }
+    auto g4vol = GetG4Volume(tgeoVol);
+    if(!g4vol) {
+      G4cout << "######### Cannot find G4LogicalVolume matching TGeoVolume " << tgeoVol->GetName() << G4endl;
+      continue;
+    }
+    fSVMap[detector][g4vol] = tgeoVol;
+  }
+  G4cout << "######### Extracted SVs for detector " << detector->GetName() << G4endl;
+}
+
+
 //______________________________________________________________________________
 G4VPhysicalVolume *TG4RootDetectorConstruction::Construct()
 {
+  if (fTopPV) return fTopPV;
+
+  auto cave = new o2::Passive::Cave("CAVE");
+  fPassive.push_back(cave);
+  auto itsDet = new o2::ITS::Detector(true);
+  fSDs.push_back(itsDet);
+
+  cave->ConstructGeometry();
+  itsDet->ConstructGeometry();
+
+  ExtractSensitiveVolumes(itsDet);
+
+  G4cout << "### INFO: TG4RootDetectorConstruction::Construct() called" << G4endl;
+
+  //TVirtualMCApplication::Instance()->ConstructGeometry();
+  TGeoVolume *top = (TGeoVolume*)fGeometry->GetListOfVolumes()->First();
+  fGeometry->SetTopVolume(top);
+  fGeometry->CloseGeometry();
 /// Main construct method.
    // First construct via TVirtualMCApplication
    // Now this assumes that the geometry is held by ROOT's TGeoManager
@@ -153,18 +206,18 @@ G4VPhysicalVolume *TG4RootDetectorConstruction::Construct()
                   "G4Root_F001", FatalException,
                   "Cannot create TG4RootDetectorConstruction without closed ROOT geometry !");
    }
-   if (fTopPV) return fTopPV;
+
    // Convert reflections via TGeo reflection factory
    fGeometry->ConvertReflections();
    CreateG4Materials();
 //   CreateG4LogicalVolumes();
    CreateG4PhysicalVolumes();
-   //TG4RootNavMgr *navMgr = TG4RootNavMgr::GetInstance(fGeometry);
-   //TG4RootNavigator *nav = navMgr->GetNavigator();
-   //nav->SetDetectorConstruction(this);
-   //nav->SetWorldVolume(fTopPV);
    G4cout << "### INFO: TG4RootDetectorConstruction::Construct() finished" << G4endl;
    fIsConstructed = kTRUE;
+
+   // Let's extract sensitive volumes
+
+
    return fTopPV;
 }
 
@@ -172,81 +225,24 @@ G4VPhysicalVolume *TG4RootDetectorConstruction::Construct()
 void TG4RootDetectorConstruction::ConstructSDandField()
 {
   auto sdManager = G4SDManager::GetSDMpointer();
-
   O2G4SensitiveDetector* g4sd = nullptr;
 
-  G4cout << "######### ConstructSDandField" << G4endl;
+  G4bool isMaster = ! G4Threading::IsWorkerThread();
+  std::cout << "On master thread? " << isMaster << std::endl;
+  std::cout << "######### ConstructSDandField" << std::endl;
 
-
-  for(auto& sd : fPotentialSDs) {
-    if(!sd) {
-      G4cout << "######### No potential SD" << G4endl;
-      return;
-    }
-    if(!sd->svList) {
-      G4cout << "######### No svList ind potential SD" << G4endl;
-      continue;
-    }
-    if(sd->svList->GetEntries() == 0) {
-      G4cout << "######### There are no SVs in potential SD " << sd->GetName() << G4endl;
-    } else {
-      g4sd = new O2G4SensitiveDetector(static_cast<o2::base::Detector*>(sd->CloneModule()));
-      sdManager->AddNewDetector(g4sd);
-      g4sd->SetVerboseLevel(2);
-      for (G4int i = 0; i < sd->svList->GetEntries(); i++) {
-        auto fairVol = static_cast<FairVolume*>(sd->svList->At(i));
-        if(!fairVol) {
-          G4cout << "S######### Cannot retrieve FairVolume in list with index " << i << G4endl;
-          continue;
-        }
-        auto tgeoVol = gGeoManager->GetVolume(fairVol->GetName());
-        if(!tgeoVol) {
-          G4cout << "S######### Cannot find TGeoVolume for FairVolumeName " << fairVol->GetName() << G4endl;
-          continue;
-        }
-        auto g4vol = GetG4Volume(tgeoVol);
-        if(!g4vol) {
-          G4cout << "S######### Cannot find G4LogicalVolume matching TGeoVolume " << tgeoVol->GetName() << G4endl;
-          continue;
-        }
-        G4cout << "S######### Set SD " << sd->GetName() << " to volume " << tgeoVol->GetName() << G4endl;
-        g4vol->SetSensitiveDetector(g4sd);
-        g4sd->MapG4LVToTGoTGeoVolumeID(g4vol, fairVol->getMCid());
-      }
-      G4cout << "######### Created SD " << sd->GetName() << G4endl;
-      continue;
-    }
-
-    if(sd->vList->getEntries() == 0) {
-      G4cout << "######### There are no Vs in potential SD " << sd->GetName() << G4endl;
-      continue;
-    }
-
-    g4sd = new O2G4SensitiveDetector(static_cast<o2::base::Detector*>(sd->CloneModule()));
+  for(auto& it : fSVMap) {
+    std::cout << "######### Build SD for " << it.first->GetName() << std::endl;
+    auto detClone = static_cast<o2::base::Detector*>(it.first->CloneModule());
+    fSDs.push_back(detClone);
+    g4sd = new O2G4SensitiveDetector(detClone);
     sdManager->AddNewDetector(g4sd);
-    g4sd->SetVerboseLevel(2);
-    for (G4int i = 0; i < sd->vList->getEntries(); i++) {
-      auto fairVol = static_cast<FairVolume*>(sd->vList->At(i));
-      if(!fairVol) {
-        G4cout << "S######### Cannot retrieve FairVolume in list with index " << i << G4endl;
-        continue;
-      }
-      auto tgeoVol = gGeoManager->GetVolume(fairVol->GetName());
-      if(!tgeoVol) {
-        G4cout << "S######### Cannot find TGeoVolume for FairVolumeName " << fairVol->GetName() << G4endl;
-        continue;
-      }
-      auto g4vol = GetG4Volume(tgeoVol);
-      if(!g4vol) {
-        G4cout << "S######### Cannot find G4LogicalVolume matching TGeoVolume " << tgeoVol->GetName() << G4endl;
-        continue;
-      }
-      G4cout << "S######### Set SD " << sd->GetName() << " to volume " << tgeoVol->GetName() << G4endl;
-      g4vol->SetSensitiveDetector(g4sd);
-      g4sd->MapG4LVToTGoTGeoVolumeID(g4vol, fairVol->getMCid());
+    for(auto& volMap : it.second) {
+      volMap.first->SetSensitiveDetector(g4sd);
+      g4sd->MapG4LVToTGoTGeoVolumeID(volMap.first, volMap.second->GetNumber());
     }
-    G4cout << "######### Created SD " << sd->GetName() << G4endl;
   }
+  sdManager->ListTree();
   /*
   G4cout << "TG4RootDetectorConstruction::ConstructSDandField" << G4endl;
   if (fSDInit) fSDInit->InitializeSDandField();
@@ -544,9 +540,4 @@ TGeoNode *TG4RootDetectorConstruction::GetNode(const G4VPhysicalVolume *g4pvol) 
    PVolumeIt_t it = fPVolumeMap.find(g4pvol);
    if (it != fPVolumeMap.end()) return it->second;
    return NULL;
-}
-
-void TG4RootDetectorConstruction::AddPotentialSD(o2::base::Detector* detector)
-{
-  fPotentialSDs.push_back(detector);
 }

@@ -31,7 +31,7 @@ class O2G4WorkerInitialization : public G4UserWorkerInitialization
 
     // methods
     //
-    void WorkerInitialize() const override final;
+    //void WorkerInitialize() const override final;
     // This method is called after the tread is created but before the
     // G4WorkerRunManager is instantiated.
 

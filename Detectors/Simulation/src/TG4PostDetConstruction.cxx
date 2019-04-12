@@ -52,7 +52,7 @@ void TG4PostDetConstruction::InitializeSDandField()
 // --
 
   G4cout << "TG4PostDetConstruction::InitializeSDandField" << G4endl;
-  TG4GeometryManager::Instance()->ConstructSDandField();
+  //TG4GeometryManager::Instance()->ConstructSDandField();
 }
 
 #endif

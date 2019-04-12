@@ -42,22 +42,20 @@ O2G4WorkerInitialization::~O2G4WorkerInitialization()
 // public methods
 //
 
-void O2G4WorkerInitialization::WorkerInitialize() const
-{
-
-}
-
 void O2G4WorkerInitialization::WorkerStart() const
 {
-
+  /// Call post initialization on workers
   auto navigator = fRunConfiguration->CreateNavigatorForTracking();
   if(!navigator) {
     G4Exception("O2G4WorkerInitialization::WorkerStart",
                 "Run0012", FatalException,
                 "No navigator could be created created");
   }
+
+
   auto runMgr = static_cast<O2G4RunManager*>(G4RunManager::GetRunManager());
   runMgr->SetVerboseLevel(2);
+  G4cout << "geometry initialized " << runMgr->IsGeometryInitialized() << G4endl;
   runMgr->RegisterNavigator(navigator);
   G4TransportationManager *trMgr = G4TransportationManager::GetTransportationManager();
   trMgr->SetNavigatorForTracking(navigator);
@@ -68,6 +66,7 @@ void O2G4WorkerInitialization::WorkerStart() const
   }
   trMgr->SetPropagatorInField(new G4PropagatorInField(navigator, fieldMgr));
   trMgr->ActivateNavigator(navigator);
+
   // At this stage the G4SteppingManager has been already created in this thread
   // and has taken the default G4Navigator from the G4TransportationManager during
   // construction ==> reset that
@@ -78,11 +77,11 @@ void O2G4WorkerInitialization::WorkerStart() const
   G4SDManager::GetSDMpointer()->SetVerboseLevel(2);
 }
 
+
+
 //_____________________________________________________________________________
 void O2G4WorkerInitialization::WorkerRunStart() const
 {
-/// Call post initialization on workers
-  return;
 }
 
 
@@ -91,7 +90,10 @@ void O2G4WorkerInitialization::WorkerRunEnd() const
 {
 // This method is called for each thread, when the local event loop has
 // finished but before the synchronization over threads.
-  return;
+  auto runMgr = static_cast<O2G4RunManager*>(G4RunManager::GetRunManager());
+  runMgr->SetVerboseLevel(2);
+  G4cout << "geometry initialized " << runMgr->IsGeometryInitialized() << G4endl;
+  G4SDManager::GetSDMpointer()->ListTree();
 }
 
 //_____________________________________________________________________________

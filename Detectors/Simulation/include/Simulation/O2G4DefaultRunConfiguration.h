@@ -84,15 +84,12 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
     // methods
     //
 
-    void AddPotentialSD(o2::base::Detector* detector);
-
     //
     // inherited
     //
     EExitStatus Initialize() override final;
 
 
-  protected:
     G4VUserDetectorConstruction* CreateDetectorConstruction() const override final;
     G4VUserPhysicsList* CreatePhysicsList() const override final;
 

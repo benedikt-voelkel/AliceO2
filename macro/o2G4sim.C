@@ -64,7 +64,7 @@ FairRunSim* o2sim_init(FairRunSim* run)
   run->SetMCEventHeader(header);
 
   // construct geometry / including magnetic field
-  build_geometry(run);
+  //build_geometry(run);
 
   // setup generator
   auto embedinto_filename = confref.getEmbedIntoFileName();
@@ -89,20 +89,17 @@ FairRunSim* o2sim_init(FairRunSim* run)
   run->Init();
   auto g4Config = new O2G4DefaultRunConfiguration();
   auto runManager = new O2G4RunManager(g4Config);
-  const TObjArray* modArr = run->GetListOfModules();
-  TIter next(modArr);
-  FairModule* module = nullptr;
-  while ((module = (FairModule*)next())) {
-    auto o2Det = dynamic_cast<o2::base::Detector*>(module);
-    if(!o2Det) {
-      LOG(WARNING) << "Could not cast to o2::base::Detector";
-      continue;
-    }
-    LOG(INFO) << "Added potential SD" << o2Det->GetName();
-    g4Config->AddPotentialSD(o2Det);
-  }
+  g4Config->Initialize();
+
+  // Mandatory initialization of detector construction and physics list
+  runManager->SetUserInitialization(g4Config->CreateDetectorConstruction());
+  runManager->SetUserInitialization(g4Config->CreatePhysicsList());
+  //runManager->SetUserNavigatorForTracking(g4Config->CreateNavigatorForTracking());
+
+  // User actions are built from this
+  runManager->SetUserInitialization(g4Config);
   runManager->Initialize();
-  finalize_geometry(run);
+  //finalize_geometry(run);
 
 
   std::stringstream geomss;
