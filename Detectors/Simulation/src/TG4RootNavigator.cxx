@@ -13,14 +13,14 @@
 /// \brief Implementation of the TG4RootNavigator class
 ///
 /// \author A. Gheata; CERN
+#include "G4SystemOfUnits.hh"
 
 #include "TGeoManager.h"
 
-#include "TG4RootDetectorConstruction.h"
+#include "O2G4DetectorConstruction.h"
+
+
 #include "TG4RootNavigator.h"
-
-#include "G4SystemOfUnits.hh"
-
 
 //ClassImp(TG4RootNavigator)
 
@@ -46,7 +46,7 @@ TG4RootNavigator::TG4RootNavigator()
 }
 
 //______________________________________________________________________________
-TG4RootNavigator::TG4RootNavigator(TG4RootDetectorConstruction *dc)
+TG4RootNavigator::TG4RootNavigator(O2G4DetectorConstruction *dc)
                  :G4Navigator(),
                   fGeometry(0),
                   fNavigator(0),
@@ -71,7 +71,7 @@ TG4RootNavigator::~TG4RootNavigator()
 }
 
 //______________________________________________________________________________
-void TG4RootNavigator::SetDetectorConstruction(TG4RootDetectorConstruction *dc)
+void TG4RootNavigator::SetDetectorConstruction(O2G4DetectorConstruction *dc)
 {
 /// Setter for detector construction. Root geometry manager pointer is taken from
 /// it and must be valid.

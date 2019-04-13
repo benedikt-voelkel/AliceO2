@@ -33,6 +33,10 @@
 #include "Steer/O2G4MCApplication.h"
 #include "Simulation/O2G4RunManager.h"
 #include "Simulation/O2G4DefaultRunConfiguration.h"
+#include "Simulation/O2G4DetectorConstruction.h"
+
+
+
 #endif
 
 FairRunSim* o2sim_init(FairRunSim* run)
@@ -92,7 +96,12 @@ FairRunSim* o2sim_init(FairRunSim* run)
   g4Config->Initialize();
 
   // Mandatory initialization of detector construction and physics list
-  runManager->SetUserInitialization(g4Config->CreateDetectorConstruction());
+  std::cerr << "SOMETHING" << std::endl;
+  auto detConstruction = dynamic_cast<O2G4DetectorConstruction*>(g4Config->CreateDetectorConstruction());
+  // These are the first modules to test with
+  detConstruction->AddModule(new o2::Passive::Cave("CAVE"));
+  detConstruction->AddModule(new o2::ITS::Detector(true));
+  runManager->SetUserInitialization(detConstruction);
   runManager->SetUserInitialization(g4Config->CreatePhysicsList());
   //runManager->SetUserNavigatorForTracking(g4Config->CreateNavigatorForTracking());
 

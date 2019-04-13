@@ -31,9 +31,7 @@ class G4UserStackingAction;
 class G4RunManager;
 class G4UImessenger;
 
-class TG4RootDetectorConstruction;
-
-class FairDetector;
+class O2G4DetectorConstruction;
 
 /// \ingroup run
 /// \brief Takes care of creating Geant4 user action classes using VMC
@@ -122,7 +120,7 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
     //Bool_t   IsMTApplication() const;
 
   protected:
-    TG4RootDetectorConstruction* fDetectorConstruction;
+    O2G4DetectorConstruction* fDetectorConstruction;
     G4VUserPhysicsList* fPhysicsList;
     TGeoManager* fGeoManager;
 

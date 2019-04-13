@@ -26,7 +26,7 @@
 class TGeoManager;
 class TGeoNavigator;
 class TGeoNode;
-class TG4RootDetectorConstruction;
+class O2G4DetectorConstruction;
 
 /// \brief GEANT4 navigator using directly a TGeo geometry.
 ///
@@ -41,7 +41,7 @@ class TG4RootNavigator : public G4Navigator {
 protected:
    TGeoManager          *fGeometry;        ///< TGeo geometry manager
    TGeoNavigator        *fNavigator;       ///< TGeo navigator
-   TG4RootDetectorConstruction *fDetConstruction; ///< G4Root detector construction
+   O2G4DetectorConstruction *fDetConstruction; ///< G4Root detector construction
 
    Bool_t                fStepEntering;    ///< Next step is entering daughter
    Bool_t                fStepExiting;     ///< Next step is exiting current volume
@@ -55,10 +55,10 @@ private:
 
 public:
    TG4RootNavigator();
-   TG4RootNavigator(TG4RootDetectorConstruction *dc);
+   TG4RootNavigator(O2G4DetectorConstruction *dc);
    virtual ~TG4RootNavigator();
 
-   void              SetDetectorConstruction(TG4RootDetectorConstruction *dc);
+   void              SetDetectorConstruction(O2G4DetectorConstruction *dc);
 
    /// Return the navigation history
    G4NavigationHistory *GetHistory() {return &fHistory;}

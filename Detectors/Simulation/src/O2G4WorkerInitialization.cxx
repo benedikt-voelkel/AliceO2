@@ -55,7 +55,6 @@ void O2G4WorkerInitialization::WorkerStart() const
 
   auto runMgr = static_cast<O2G4RunManager*>(G4RunManager::GetRunManager());
   runMgr->SetVerboseLevel(2);
-  G4cout << "geometry initialized " << runMgr->IsGeometryInitialized() << G4endl;
   runMgr->RegisterNavigator(navigator);
   G4TransportationManager *trMgr = G4TransportationManager::GetTransportationManager();
   trMgr->SetNavigatorForTracking(navigator);
@@ -90,10 +89,7 @@ void O2G4WorkerInitialization::WorkerRunEnd() const
 {
 // This method is called for each thread, when the local event loop has
 // finished but before the synchronization over threads.
-  auto runMgr = static_cast<O2G4RunManager*>(G4RunManager::GetRunManager());
-  runMgr->SetVerboseLevel(2);
-  G4cout << "geometry initialized " << runMgr->IsGeometryInitialized() << G4endl;
-  G4SDManager::GetSDMpointer()->ListTree();
+  return;
 }
 
 //_____________________________________________________________________________

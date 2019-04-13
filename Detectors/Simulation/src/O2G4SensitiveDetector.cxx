@@ -17,8 +17,6 @@ O2G4SensitiveDetector::O2G4SensitiveDetector(o2::base::Detector* detector)
   collectionName.insert( "hodoscopeColl");
 }
 
-
-
 void O2G4SensitiveDetector::Initialize(G4HCofThisEvent* hce)
 {
   fHitsCollection = new G4THitsCollection<G4VHit>(SensitiveDetectorName, collectionName[0]);
@@ -27,7 +25,6 @@ void O2G4SensitiveDetector::Initialize(G4HCofThisEvent* hce)
   }
   hce->AddHitsCollection(fHCID,fHitsCollection);
 }
-
 
 G4bool O2G4SensitiveDetector::ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist)
 {
@@ -42,7 +39,6 @@ G4bool O2G4SensitiveDetector::ProcessHits(G4Step* aStep, G4TouchableHistory* ROh
   // Turn into FairVolume pointer simply by comparing names
   return fO2Detector->ProcessHits(aStep, it->second);
 }
-
 
 void O2G4SensitiveDetector::MapG4LVToTGoTGeoVolumeID(G4LogicalVolume* g4lv, G4int tgeoVolID)
 {

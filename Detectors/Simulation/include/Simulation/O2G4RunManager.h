@@ -36,12 +36,9 @@ class O2G4RunManager : public G4RunManager
     O2G4RunManager(const O2G4RunManager&) = delete;
     O2G4RunManager& operator=(const O2G4RunManager&) = delete;
 
-    void RegisterNavigator(G4Navigator* userNavigator);
+    void Initialize() override;
 
-    G4bool IsGeometryInitialized() const
-    {
-      return geometryInitialized;
-    }
+    void RegisterNavigator(G4Navigator* userNavigator);
 
     //
     // methods for building/management of geometry

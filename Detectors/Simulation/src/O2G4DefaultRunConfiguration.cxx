@@ -5,6 +5,7 @@
 #endif
 #include <G4TransportationManager.hh>
 #include "FTFP_BERT.hh"
+#include "QGSP_FTFP_BERT.hh"
 
 #include "TGeoManager.h"
 
@@ -12,9 +13,9 @@
 
 //#include "O2G4DetectorConstruction.h"
 
-#include "TG4RootDetectorConstruction.h"
 #include "TG4RootNavigator.h"
 
+#include "O2G4DetectorConstruction.h"
 #include "O2G4PrimaryGeneratorAction.h"
 #include "O2G4RunAction.h"
 #include "O2G4EventAction.h"
@@ -25,28 +26,19 @@
 
 
 O2G4DefaultRunConfiguration::O2G4DefaultRunConfiguration()
-  : VO2G4RunConfiguration(), fPhysicsList(new FTFP_BERT())
+  : VO2G4RunConfiguration(), fPhysicsList(new QGSP_FTFP_BERT())
 {
   if(!gGeoManager) {
     fGeoManager = new TGeoManager("TGeo", "Root geometry manager");
   } else {
     fGeoManager = gGeoManager;
   }
-  fDetectorConstruction = new TG4RootDetectorConstruction(fGeoManager);
+  fDetectorConstruction = new O2G4DetectorConstruction(fGeoManager);
   std::cerr << "O2G4DefaultRunConfiguration constructed" << std::endl;
 }
 
 EExitStatus O2G4DefaultRunConfiguration::Initialize()
 {
-  fDetectorConstruction->Initialize(nullptr);
-  G4int nthreads = 1;
-
-  #ifdef G4MULTITHREADED
-  nthreads = G4MTRunManager::GetMasterRunManager()->GetNumberOfThreads();
-  #endif
-  if (nthreads > 1) {
-    gGeoManager->SetMaxThreads(nthreads);
-  }
   return VO2G4RunConfiguration::Initialize();
 }
 
@@ -102,6 +94,6 @@ G4UserWorkerInitialization* O2G4DefaultRunConfiguration::CreateWorkerInitializat
 
 G4Navigator* O2G4DefaultRunConfiguration::CreateNavigatorForTracking() const
 {
-  std::cerr << "TG4RootNavMgr has been created on worker" << std::endl;
+  std::cerr << "TG4RootNavigator has been created" << std::endl;
   return new TG4RootNavigator(fDetectorConstruction);
 }

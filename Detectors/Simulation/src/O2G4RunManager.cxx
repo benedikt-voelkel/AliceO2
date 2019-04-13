@@ -48,6 +48,17 @@ void O2G4RunManager::RegisterNavigator(G4Navigator* userNavigator)
   fUserNavigators.emplace_back(userNavigator);
 }
 
+void O2G4RunManager::Initialize()
+{
+  #ifdef G4MULTITHREADED
+    G4MTRunManager::Initialize();
+  #else
+    G4RunManager::Initialize();
+  #endif
+
+  fRunConfiguration->Initialize();
+
+}
 
 
 #undef PARENT_CLASS
