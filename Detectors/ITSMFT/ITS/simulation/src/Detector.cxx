@@ -358,9 +358,9 @@ Bool_t Detector::ProcessHits(FairVolume* vol)
 Bool_t Detector::ProcessHits(G4Step* aStep, G4int volID)
 {
   G4cout << "######################## HIT in ITS ###################" << G4endl;
-  G4Exception("ODetector::ProcessHits",
-              "Run0012", FatalException,
-              "ProcessHits Exception");
+  G4cout << "ITS Detector at " << this << G4endl;
+  return kTRUE;
+
   // /auto preStepPoint = aStep->GetPreStepPoint();
   auto track = aStep->GetTrack();
   // This method is called from the MC stepping
@@ -494,6 +494,8 @@ Bool_t Detector::ProcessHits(G4Step* aStep, G4int volID)
     //fMC->CurrentVolOffID(3, halfstave);
     //fMC->CurrentVolOffID(4, stave);
     int chipindex = mGeometryTGeo->getChipIndex(lay, stave, halfstave, module, chipinmodule);
+
+    return kTRUE;
 
     Hit* p = addHit(track->GetTrackID()-1, chipindex, mTrackData.mPositionStart.Vect(), positionStop.Vect(),
                     mTrackData.mMomentumStart.Vect(), mTrackData.mMomentumStart.E(), positionStop.T(),

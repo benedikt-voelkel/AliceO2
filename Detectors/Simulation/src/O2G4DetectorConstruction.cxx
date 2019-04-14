@@ -175,19 +175,6 @@ void O2G4DetectorConstruction::AddModule(FairModule* module)
   fModules.push_back(module);
 }
 
-EExitStatus O2G4DetectorConstruction::Initialize()
-{
-  G4int nthreads = 1;
-
-  #ifdef G4MULTITHREADED
-  nthreads = G4MTRunManager::GetMasterRunManager()->GetNumberOfThreads();
-  #endif
-  if (nthreads > 1) {
-    fGeometry->SetMaxThreads(nthreads);
-  }
-  return O2SimInterface::Initialize();
-}
-
 
 //______________________________________________________________________________
 G4VPhysicalVolume *O2G4DetectorConstruction::Construct()

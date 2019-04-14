@@ -36,6 +36,7 @@ G4bool O2G4SensitiveDetector::ProcessHits(G4Step* aStep, G4TouchableHistory* ROh
   if(it == fG4LVTGeoVolumeIDMap.end()) {
     return false;
   }
+  //return true;
   // Turn into FairVolume pointer simply by comparing names
   return fO2Detector->ProcessHits(aStep, it->second);
 }

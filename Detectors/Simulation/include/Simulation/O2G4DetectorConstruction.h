@@ -154,7 +154,6 @@ public:
    G4VPhysicalVolume *Construct() override final;
    void               ConstructSDandField() override final;
    void AddModule(FairModule* module);
-   EExitStatus Initialize() override;
 
 
    // Getters

@@ -7,6 +7,11 @@
 #include "FTFP_BERT.hh"
 #include "QGSP_FTFP_BERT.hh"
 
+#include <G4OpticalPhysics.hh>
+#include <G4SpecialCuts.hh>
+#include <G4StepLimiterPhysics.hh>
+
+
 #include "TGeoManager.h"
 
 #include "FairModule.h"
@@ -34,11 +39,26 @@ O2G4DefaultRunConfiguration::O2G4DefaultRunConfiguration()
     fGeoManager = gGeoManager;
   }
   fDetectorConstruction = new O2G4DetectorConstruction(fGeoManager);
+
+  // TODO That is a test
+  fPhysicsList->RegisterPhysics(new G4OpticalPhysics());
+  //fPhysicsList->RegisterPhysics(new G4SpecialCuts());
+  fPhysicsList->RegisterPhysics(new G4StepLimiterPhysics());
   std::cerr << "O2G4DefaultRunConfiguration constructed" << std::endl;
 }
 
 EExitStatus O2G4DefaultRunConfiguration::Initialize()
 {
+  G4int nthreads = 1;
+
+  G4cout << "Initialize threads for TGeoManager and navigation " << G4endl;
+
+  #ifdef G4MULTITHREADED
+  nthreads = G4MTRunManager::GetMasterRunManager()->GetNumberOfThreads();
+  #endif
+  if (nthreads > 1) {
+    fGeoManager->SetMaxThreads(nthreads);
+  }
   return VO2G4RunConfiguration::Initialize();
 }
 
@@ -96,4 +116,10 @@ G4Navigator* O2G4DefaultRunConfiguration::CreateNavigatorForTracking() const
 {
   std::cerr << "TG4RootNavigator has been created" << std::endl;
   return new TG4RootNavigator(fDetectorConstruction);
+}
+
+EExitStatus O2G4DefaultRunConfiguration::AddThread()
+{
+  fGeoManager->SetMaxThreads(fGeoManager->GetMaxThreads() + 1);
+  return EExitStatus::kSUCCESS;
 }

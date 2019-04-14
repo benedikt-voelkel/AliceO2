@@ -91,6 +91,8 @@ class VO2G4RunConfiguration : public G4VUserActionInitialization, public O2SimIn
 
     virtual EExitStatus Initialize() override;
 
+    virtual EExitStatus AddThread() {return EExitStatus::kSUCCESS;}
+
     virtual G4VUserDetectorConstruction* CreateDetectorConstruction() const = 0;
     virtual G4VUserPhysicsList* CreatePhysicsList() const = 0;
 

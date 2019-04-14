@@ -56,8 +56,7 @@ void O2G4RunManager::Initialize()
     G4RunManager::Initialize();
   #endif
 
-  fRunConfiguration->Initialize();
-
+  //fRunConfiguration->Initialize();
 }
 
 

@@ -45,6 +45,7 @@ O2G4WorkerInitialization::~O2G4WorkerInitialization()
 void O2G4WorkerInitialization::WorkerStart() const
 {
   /// Call post initialization on workers
+  fRunConfiguration->AddThread();
   auto navigator = fRunConfiguration->CreateNavigatorForTracking();
   if(!navigator) {
     G4Exception("O2G4WorkerInitialization::WorkerStart",

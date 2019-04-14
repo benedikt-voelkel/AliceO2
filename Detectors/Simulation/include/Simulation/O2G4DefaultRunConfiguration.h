@@ -25,6 +25,7 @@
 class G4VUserDetectorConstruction;
 class G4VUserPrimaryGeneratorAction;
 class G4VUserPhysicsList;
+class G4VModularPhysicsList;
 class G4UserRunAction;
 class G4UserEventAction;
 class G4UserStackingAction;
@@ -87,6 +88,8 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
     //
     EExitStatus Initialize() override final;
 
+    EExitStatus AddThread() override final;
+
 
     G4VUserDetectorConstruction* CreateDetectorConstruction() const override final;
     G4VUserPhysicsList* CreatePhysicsList() const override final;
@@ -121,7 +124,7 @@ class O2G4DefaultRunConfiguration : public VO2G4RunConfiguration
 
   protected:
     O2G4DetectorConstruction* fDetectorConstruction;
-    G4VUserPhysicsList* fPhysicsList;
+    G4VModularPhysicsList* fPhysicsList;
     TGeoManager* fGeoManager;
 
 
