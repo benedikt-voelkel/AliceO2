@@ -1,20 +1,6 @@
 #ifndef O2G4_RUN_ACTION_H
 #define O2G4_RUN_ACTION_H
 
-//------------------------------------------------
-// The Geant4 Virtual Monte Carlo package
-// Copyright (C) 2007 - 2014 Ivana Hrivnacova
-// All rights reserved.
-//
-// For the licensing terms see geant4_vmc/LICENSE.
-// Contact: root-vmc@cern.ch
-//-------------------------------------------------
-
-/// \file O2G4RunAction.h
-/// \brief Definition of the O2G4RunAction class
-///
-/// \author I. Hrivnacova; IPN Orsay
-
 #include <memory>
 
 #include <G4UserRunAction.hh>
