@@ -11,13 +11,21 @@
 #ifndef O2_VMCREPLAY_H
 #define O2_VMCREPLAY_H
 
+#include <vector>
+
 #include "TGeant3TGeo.h"
+
+#include "MCStepLogger/StepInfo.h"
 
 class VMCReplay : public TGeant3TGeo
 {
  public:
   using TGeant3TGeo::TGeant3TGeo;
 
+  void print() const;
+
+ private:
+  std::vector<o2::StepInfo> mSteps;
   ClassDef(VMCReplay, 1); // needed as long we inherit from TObject
 };
 

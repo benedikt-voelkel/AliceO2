@@ -8,14 +8,11 @@
 # granted to it by virtue of its status as an Intergovernmental Organization or
 # submit itself to any jurisdiction.
 
+# TODO: remove this file once MCStepLogger correctly exports its cmake config
 
-o2_add_library(VMCReplay
-        SOURCES src/VMCReplay.cxx
-        PUBLIC_LINK_LIBRARIES MC::Geant3
-        PUBLIC_LINK_LIBRARIES MCStepLogger::Core
-        )
+find_package(MCStepLogger CONFIG)
+if(NOT FOUND_MCStepLogger)
+    return()
+endif()
 
-set(headers
-        include/VMCReplay/VMCReplay.h)
 
-o2_target_root_dictionary(VMCReplay HEADERS ${headers})

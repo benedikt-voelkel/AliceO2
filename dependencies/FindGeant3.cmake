@@ -16,12 +16,13 @@ if(NOT Geant3_FOUND)
   return()
 endif()
 
-set_target_properties(geant321
-                      PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-                                 "${Geant3_INCLUDE_DIRS}")
+#set_target_properties(geant321
+#                      PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
+#                                 "${Geant3_INCLUDE_DIRS}")
+
 
 # Promote the imported target to global visibility
 # (so we can alias it)
-set_target_properties(geant321 PROPERTIES IMPORTED_GLOBAL TRUE)
+set_target_properties(GEANT3_VMC::geant321 PROPERTIES IMPORTED_GLOBAL TRUE)
 
-add_library(MC::Geant3 ALIAS geant321)
+add_library(MC::Geant3 ALIAS GEANT3_VMC::geant321)

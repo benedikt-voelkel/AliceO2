@@ -8,6 +8,16 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+#include <iostream>
+
 #include "VMCReplay/VMCReplay.h"
 
 ClassImp(VMCReplay);
+
+void VMCReplay::print() const
+{
+    for(auto& s : mSteps) {
+        std::cout << s.step << "\n";
+    }
+    std::cout << std::endl;
+}
