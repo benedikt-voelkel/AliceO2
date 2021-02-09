@@ -87,6 +87,8 @@ add_subdirectory(prodtests)
 add_subdirectory(Analysis)
 add_subdirectory(scripts)
 
+add_subdirectory(Python3Test)
+
 if(BUILD_EXAMPLES)
   add_subdirectory(Examples)
 endif()
