@@ -38,11 +38,13 @@ o2_add_library(DetectorsBase
                                      O2::CCDB
                                      MC::VMC
                                      TBB::tbb
+                                     VecGeom::vecgeom
                PRIVATE_INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/GPU/GPUTracking/Merger # Must not link to avoid cyclic dependency
                              )
 
 o2_target_root_dictionary(DetectorsBase
                           HEADERS include/DetectorsBase/Detector.h
+                                  include/DetectorsBase/VoxelDetector.h
                                   include/DetectorsBase/GeometryManager.h
                                   include/DetectorsBase/MaterialManager.h
                                   include/DetectorsBase/MaterialManagerParam.h

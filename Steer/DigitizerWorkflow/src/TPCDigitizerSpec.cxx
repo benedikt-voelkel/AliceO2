@@ -38,6 +38,7 @@
 #include "TPCSimulation/Digitizer.h"
 #include "TPCSimulation/Detector.h"
 #include "DetectorsBase/BaseDPLDigitizer.h"
+#include "DetectorsBase/VoxelDetector.h"
 #include "DetectorsBase/Detector.h"
 #include "TPCCalibration/VDriftHelper.h"
 #include "CommonDataFormat/RangeReference.h"
@@ -54,6 +55,33 @@ namespace o2
 {
 namespace tpc
 {
+
+template <typename V>
+void registerHits(V& voxDet, std::vector<HitGroup> const& hitGroups)
+{
+  for (auto& hitg : hitGroups) {
+    for(int i = 0; i < hitg.getSize(); i++) {
+      voxDet.registerHit(hitg.getHit(i));
+    }
+  }
+}
+
+template <typename V>
+void filterHitsOnSignal(V const& voxDet, std::vector<HitGroup>& hitGroups)
+{
+  auto unfiltered = hitGroups;
+  hitGroups.clear();
+  for(auto& hitg : unfiltered) {
+    HitGroup hitgFiltered;
+    for(int i = 0; i < hitg.getSize(); i++) {
+      auto const& hit = hitg.getHit(i);
+      if(voxDet.keepHit(hit)) {
+        hitgFiltered.addHit(hit.GetX(), hit.GetY(), hit.GetZ(), hit.GetTime(), hit.GetEnergyLoss());
+      }
+    }
+    hitGroups.push_back(hitgFiltered);
+  }
+}
 
 template <typename T>
 void copyHelper(T const& origin, T& target)
@@ -107,13 +135,16 @@ using namespace o2::base;
 class TPCDPLDigitizerTask : public BaseDPLDigitizer
 {
  public:
-  TPCDPLDigitizerTask(bool internalwriter) : mInternalWriter(internalwriter), BaseDPLDigitizer(InitServices::FIELD | InitServices::GEOM)
+  TPCDPLDigitizerTask(bool internalwriter) : mInternalWriter(internalwriter), BaseDPLDigitizer(InitServices::FIELD | InitServices::GEOM),
+                                             mVoxelDetector(vecgeom::Vector3D<float>(40., 0., -270.), vecgeom::Vector3D<float>(50, vecgeom::kTwoPi, 540), 100, 100, 100)
   {
   }
 
   void initDigitizerTask(framework::InitContext& ic) override
   {
     LOG(info) << "Initializing TPC digitization";
+
+    mFilterOnSignal = ic.options().get<bool>("filter-on-signal");
 
     mLaneId = ic.services().get<const o2::framework::DeviceSpec>().rank;
 
@@ -388,7 +419,7 @@ class TPCDPLDigitizerTask : public BaseDPLDigitizer
     mDigitizer.setSector(sector);
     mDigitizer.init();
 
-    auto& eventParts = context->getEventParts();
+    auto eventParts = context->getEventParts();
 
     auto flushDigitsAndLabels = [this, digitsAccum, &labelAccum, &commonModeAccum](bool finalFlush = false) {
       mFlushCounter++;
@@ -436,6 +467,10 @@ class TPCDPLDigitizerTask : public BaseDPLDigitizer
 
       // for each collision, loop over the constituents event and source IDs
       // (background signal merging is basically taking place here)
+      if (mFilterOnSignal) {
+        std::sort(eventParts[collID].begin(), eventParts[collID].end(), [](o2::steer::EventPart const& a, o2::steer::EventPart const& b) { return a.sourceID > b.sourceID; });
+        mVoxelDetector.reset();
+      }
       for (auto& part : eventParts[collID]) {
         const int eventID = part.entryID;
         const int sourceID = part.sourceID;
@@ -446,6 +481,17 @@ class TPCDPLDigitizerTask : public BaseDPLDigitizer
         context->retrieveHits(mSimChains, getBranchNameLeft(sector).c_str(), part.sourceID, part.entryID, &hitsLeft);
         context->retrieveHits(mSimChains, getBranchNameRight(sector).c_str(), part.sourceID, part.entryID, &hitsRight);
         LOG(debug) << "TPC: Found " << hitsLeft.size() << " hit groups left and " << hitsRight.size() << " hit groups right in collision " << collID << " eventID " << part.entryID;
+
+        if (mFilterOnSignal) {
+          LOG(INFO) << "Filter on signal";
+          if (!steer::EventPart::isBackGround(part)) {
+            registerHits(mVoxelDetector, hitsLeft);
+            registerHits(mVoxelDetector, hitsRight);
+          } else {
+            filterHitsOnSignal(mVoxelDetector, hitsLeft);
+            filterHitsOnSignal(mVoxelDetector, hitsRight);
+          }
+        }
 
         mDigitizer.process(hitsLeft, eventID, sourceID);
         mDigitizer.process(hitsRight, eventID, sourceID);
@@ -495,6 +541,9 @@ class TPCDPLDigitizerTask : public BaseDPLDigitizer
   bool mWithMCTruth = true;
   bool mInternalWriter = false;
   bool mUseCalibrationsFromCCDB = false;
+  bool mFilterOnSignal = false; // whether to filter out background hits not overlapping with signal
+  VoxelDetector<vecgeom::FlatVoxelHashMapCylinder,bool,true> mVoxelDetector; // keeps track of which voxel = (spatial regions) have a (signal) hit
+                                                               // This is used to filter out unnecessary background hits
 };
 
 o2::framework::DataProcessorSpec getTPCDigitizerSpec(int channel, bool writeGRP, bool mctruth, bool internalwriter)
@@ -528,13 +577,12 @@ o2::framework::DataProcessorSpec getTPCDigitizerSpec(int channel, bool writeGRP,
     inputs,
     outputs,
     AlgorithmSpec{adaptFromTask<TPCDPLDigitizerTask>(internalwriter)},
-    Options{
-      {"distortionType", VariantType::Int, 0, {"Distortion type to be used. 0 = no distortions (default), 1 = realistic distortions (not implemented yet), 2 = constant distortions"}},
-      {"initialSpaceChargeDensity", VariantType::String, "", {"Path to root file containing TH3 with initial space-charge density and name of the TH3 (comma separated)"}},
-      {"readSpaceCharge", VariantType::String, "", {"Path to root file containing pre-calculated space-charge object and name of the object (comma separated)"}},
-      {"TPCtriggered", VariantType::Bool, false, {"Impose triggered RO mode (default: continuous)"}},
-      {"TPCuseCCDB", VariantType::Bool, false, {"true: load calibrations from CCDB; false: use random calibratoins"}},
-    }};
+    Options{{"distortionType", VariantType::Int, 0, {"Distortion type to be used. 0 = no distortions (default), 1 = realistic distortions (not implemented yet), 2 = constant distortions"}},
+            {"initialSpaceChargeDensity", VariantType::String, "", {"Path to root file containing TH3 with initial space-charge density and name of the TH3 (comma separated)"}},
+            {"readSpaceCharge", VariantType::String, "", {"Path to root file containing pre-calculated space-charge object and name of the object (comma separated)"}},
+            {"TPCtriggered", VariantType::Bool, false, {"Impose triggered RO mode (default: continuous)"}},
+            {"TPCuseCCDB", VariantType::Bool, false, {"true: load calibrations from CCDB; false: use random calibratoins"}},
+            {"filter-on-signal", o2::framework::VariantType::Bool, false, {"treat only relevant background hits"}}}};
 }
 
 o2::framework::WorkflowSpec getTPCDigitizerSpec(int nLanes, std::vector<int> const& sectors, bool mctruth, bool internalwriter)

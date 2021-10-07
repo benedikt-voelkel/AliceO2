@@ -22,6 +22,7 @@
 #include "DataFormatsITSMFT/NoiseMap.h"
 #include "SimulationDataFormat/ConstMCTruthContainer.h"
 #include "DetectorsBase/BaseDPLDigitizer.h"
+#include "DetectorsBase/VoxelDetector.h"
 #include "DetectorsCommonDataFormats/DetID.h"
 #include "DetectorsCommonDataFormats/SimTraits.h"
 #include "DetectorsCommonDataFormats/DetectorNameConf.h"
@@ -35,7 +36,6 @@
 #include <TChain.h>
 #include <TStopwatch.h>
 #include <string>
-#include <VecGeom/base/FlatVoxelHashMap.h>
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
@@ -148,7 +148,7 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
       // first sort eventParts so that background comes last --> makes filtering out background hits based on signal easier
       std::sort(eventParts[collID].begin(), eventParts[collID].end(), [](o2::steer::EventPart const& a, o2::steer::EventPart const& b) { return a.sourceID > b.sourceID; });
       if (mFilterOnSignal) {
-        mHitVoxels.clear();
+        mHitVoxels.reset();
       }
       for (auto& part : eventParts[collID]) {
         // get the hits for this event and this source
@@ -158,28 +158,16 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
         // This is just a demonstration based on regular 3D voxels. Other approaches seem possible, for instance to check vicinity in terms
         // of ALIPE-chip-ID etc.;
         if (mFilterOnSignal) {
+          LOG(INFO) << "Filter on signal";
           if (!steer::EventPart::isBackGround(part)) {
             for (auto& hit : mHits) {
-              auto key = mHitVoxels.getVoxelKey(vecgeom::Vector3D<float>(hit.GetX(), hit.GetY(), hit.GetZ()));
-              assert(key >= 0);
-              assert(key < 100 * 100 * 100);
-              if (!mHitVoxels.isOccupied(key)) {
-                mHitVoxels.addPropertyForKey(key, true);
-              }
+              mHitVoxels.registerHit(hit);
             }
           } else {
             // filtering step
-            if (mHitVoxels.size() > 0) {
-              auto unfiltered = mHits;
-              mHits.clear();
-              for (auto& h : unfiltered) {
-                // check region around this hit: check voxel plus few nearest neighbours ?
-                vecgeom::Vector3D<float> p(h.GetX(), h.GetY(), h.GetZ());
-                if (mHitVoxels.isOccupied(p)) {
-                  mHits.push_back(h);
-                }
-              }
-            }
+            auto const nHitsPre = mHits.size();
+            mHitVoxels.filterHits(mHits);
+            LOG(WARNING) << "Filtered hits " << mHits.size() << " out of " << nHitsPre;
           }
         }
 
@@ -248,7 +236,8 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
                                                 mWithMCTruth(mctruth),
                                                 // these coordinates are roughly the extent of the ALPIDE chips in the global frame
                                                 // TODO: choose number of voxels so that a voxel has the size on the order of an ALPIDE chip
-                                                mHitVoxels(vecgeom::Vector3D<float>(-40, -40, -75.5), vecgeom::Vector3D<float>(80, 80, 151), 100, 100, 100)
+                                                //mHitVoxels(vecgeom::Vector3D<float>(-40, -40, -75.5), vecgeom::Vector3D<float>(80, 80, 151), 100, 100, 100)
+                                                mHitVoxels(vecgeom::Vector3D<float>(2., 0., -75.5), vecgeom::Vector3D<float>(50, vecgeom::kTwoPi, 151), 100, 100, 100)
   {
   }
 
@@ -321,8 +310,8 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
   int mFixMC2ROF = 0;                                                             // 1st entry in mc2rofRecordsAccum to be fixed for ROFRecordID
   o2::parameters::GRPObject::ROMode mROMode = o2::parameters::GRPObject::PRESENT; // readout mode
 
-  vecgeom::FlatVoxelHashMap<bool, true> mHitVoxels; // keeps track of which voxel = (spatial regions) have a (signal) hit
-                                                    // This is used to filter out unnecessary background hits
+  VoxelDetector<vecgeom::FlatVoxelHashMapCylinder,bool,true> mHitVoxels; // keeps track of which voxel = (spatial regions) have a (signal) hit
+                                                               // This is used to filter out unnecessary background hits
 };
 
 //_______________________________________________
