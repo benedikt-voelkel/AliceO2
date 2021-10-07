@@ -121,8 +121,8 @@ o2_add_executable(digitizer-workflow
                                         O2::ZDCSimulation
                                         O2::ZDCWorkflow
                                         O2::DetectorsRaw
-                                        VecGeom::vecgeom
                                         )
+endif()
 
 
 
