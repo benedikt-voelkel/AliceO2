@@ -58,6 +58,8 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
   {
     mDisableQED = ic.options().get<bool>("disable-qed");
     mFilterOnSignal = ic.options().get<bool>("filter-on-signal");
+    mUseCylinder = ic.options().get<bool>("use-cylinder");
+
     // init digitizer
     //mDigitizer.init();
   }
@@ -149,6 +151,7 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
       std::sort(eventParts[collID].begin(), eventParts[collID].end(), [](o2::steer::EventPart const& a, o2::steer::EventPart const& b) { return a.sourceID > b.sourceID; });
       if (mFilterOnSignal) {
         mHitVoxels.reset();
+        //mHitVoxelsCylinder.reset();
       }
       for (auto& part : eventParts[collID]) {
         // get the hits for this event and this source
@@ -161,11 +164,20 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
           LOG(INFO) << "Filter on signal";
           if (!steer::EventPart::isBackGround(part)) {
             for (auto& hit : mHits) {
+             // if (mUseCylinder) {
+             //   mHitVoxelsCylinder.registerHit(hit);
+             //   continue;
+             // }
               mHitVoxels.registerHit(hit);
             }
           } else {
             // filtering step
             auto const nHitsPre = mHits.size();
+            /*if (mUseCylinder) {
+              mHitVoxelsCylinder.filterHits(mHits);
+            } else {
+              mHitVoxels.filterHits(mHits);
+            }*/
             mHitVoxels.filterHits(mHits);
             LOG(WARNING) << "Filtered hits " << mHits.size() << " out of " << nHitsPre;
           }
@@ -236,8 +248,8 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
                                                 mWithMCTruth(mctruth),
                                                 // these coordinates are roughly the extent of the ALPIDE chips in the global frame
                                                 // TODO: choose number of voxels so that a voxel has the size on the order of an ALPIDE chip
-                                                //mHitVoxels(vecgeom::Vector3D<float>(-40, -40, -75.5), vecgeom::Vector3D<float>(80, 80, 151), 100, 100, 100)
-                                                mHitVoxels(vecgeom::Vector3D<float>(2., 0., -75.5), vecgeom::Vector3D<float>(50, vecgeom::kTwoPi, 151), 100, 100, 100)
+                                                mHitVoxels(vecgeom::Vector3D<float>(-40, -40, -75.5), vecgeom::Vector3D<float>(80, 80, 151), 100, 100, 100)
+                                                //mHitVoxelsCylinder(vecgeom::Vector3D<float>(2., 0., -75.5), vecgeom::Vector3D<float>(50, vecgeom::kTwoPi, 151), 100, 100, 100)
   {
   }
 
@@ -294,6 +306,7 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
   bool mFinished = false;
   bool mDisableQED = false;
   bool mFilterOnSignal = false; // whether to filter out background hits not overlapping with signal
+  bool mUseCylinder = false;
   o2::detectors::DetID mID;
   o2::header::DataOrigin mOrigin = o2::header::gDataOriginInvalid;
   o2::itsmft::Digitizer mDigitizer;
@@ -310,8 +323,9 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
   int mFixMC2ROF = 0;                                                             // 1st entry in mc2rofRecordsAccum to be fixed for ROFRecordID
   o2::parameters::GRPObject::ROMode mROMode = o2::parameters::GRPObject::PRESENT; // readout mode
 
-  VoxelDetector<vecgeom::FlatVoxelHashMapCylinder,bool,true> mHitVoxels; // keeps track of which voxel = (spatial regions) have a (signal) hit
-                                                               // This is used to filter out unnecessary background hits
+  //VoxelDetector<vecgeom::FlatVoxelHashMapCylinder> mHitVoxelsCylinder; // keeps track of which voxel = (spatial regions) have a (signal) hit
+                                                                       // This is used to filter out unnecessary background hits
+  VoxelDetector<vecgeom::FlatVoxelHashMap> mHitVoxels;
 };
 
 //_______________________________________________
@@ -382,7 +396,8 @@ DataProcessorSpec getITSDigitizerSpec(int channel, bool mctruth)
                            Options{
                              {"disable-qed", o2::framework::VariantType::Bool, false, {"disable QED handling"}},
                              //  { "configKeyValues", VariantType::String, "", { parHelper.str().c_str() } }
-                             {"filter-on-signal", o2::framework::VariantType::Bool, false, {"treat only relevant background hits"}}
+                             {"filter-on-signal", o2::framework::VariantType::Bool, false, {"treat only relevant background hits"}},
+                             {"use-cylinder", o2::framework::VariantType::Bool, false, {"switch to cylinder voxels"}}
 
                            }};
 }
