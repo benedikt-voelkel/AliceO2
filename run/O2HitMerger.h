@@ -605,6 +605,7 @@ class O2HitMerger : public FairMQDevice
         if (!checkIfNextFlushable()) {
           return false;
         }
+        continue;
       }
 
       auto& subEventInfoList = (*iter).second;
