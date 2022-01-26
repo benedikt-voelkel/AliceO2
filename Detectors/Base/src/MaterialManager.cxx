@@ -356,7 +356,8 @@ TGeoMedium* MaterialManager::getTGeoMedium(const char* mediumname)
   return med;
 }
 
-void MaterialManager::digestCutsFromJSON(int globalindex, rapidjson::Value& cuts) {
+void MaterialManager::digestCutsFromJSON(int globalindex, rapidjson::Value& cuts)
+{
   for (rapidjson::SizeType i = 0; i < cuts.Size(); i++) {
     if (globalindex < 0) {
       DefaultCut(static_cast<ECut>(i), cuts[i].GetFloat());
@@ -366,7 +367,8 @@ void MaterialManager::digestCutsFromJSON(int globalindex, rapidjson::Value& cuts
   }
 }
 
-void MaterialManager::digestProcessesFromJSON(int globalindex, rapidjson::Value& cuts) {
+void MaterialManager::digestProcessesFromJSON(int globalindex, rapidjson::Value& cuts)
+{
   for (rapidjson::SizeType i = 0; i < cuts.Size(); i++) {
     if (globalindex < 0) {
       DefaultProcess(static_cast<EProc>(i), cuts[i].GetInt());
