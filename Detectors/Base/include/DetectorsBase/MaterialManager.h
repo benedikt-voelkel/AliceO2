@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <initializer_list>
 #include <iosfwd>
+#include "rapidjson/document.h"
 
 class TGeoMedium;
 
@@ -131,8 +132,12 @@ class MaterialManager
   /// Custom setting of process or cut given parameter name and value
   void SpecialCut(const char* modname, int localindex, ECut parID, Float_t val);
 
+  /// Close and apply all parameters
+  void Close();
+
   /// load cuts and process flags from a data file (like AliRoot did)
   void loadCutsAndProcessesFromFile(const char* modname, const char* filename);
+  void loadCutsAndProcessesFromJSON(std::string const& filename);
 
   /// Set flags whether to use special cuts and process settings
   void enableSpecialProcesses(bool val = true) { mApplySpecialProcesses = val; }
@@ -220,6 +225,8 @@ class MaterialManager
   void Cuts(ESpecial special, int globalindex, const std::initializer_list<std::pair<ECut, Float_t>>& parIDValMap);
   void Process(ESpecial special, int globalindex, EProc parID, int val);
   void Cut(ESpecial special, int globalindex, ECut parID, Float_t val);
+  void digestCutsFromJSON(int globalindex, rapidjson::Value& cuts);
+  void digestProcessesFromJSON(int globalindex, rapidjson::Value& processes);
 
   // insert material name
   void insertMaterialName(const char* uniquename, int index);
