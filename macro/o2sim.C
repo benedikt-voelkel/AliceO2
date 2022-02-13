@@ -120,7 +120,7 @@ FairRunSim* o2sim_init(bool asservice)
         }
       }
     }
-    if(readoutDetMask.none()) {
+    if (readoutDetMask.none()) {
       LOG(info) << "Hit creation disabled for all detectors";
     }
     // somewhat ugly, but this is the most straighforward way to make sure the detectors to align
