@@ -37,7 +37,7 @@ void Config()
   replay->setStepFilename(params.stepFilename);
   replay->setStepTreename(params.stepTreename);
   replay->cutsFromConfig(params.cutFile);
-  replay->blockSetProcessesCuts();
+  //replay->blockSetProcessesCuts();
   //replay->SetCut("CUTALLE", params.energyCut);
 }
 
