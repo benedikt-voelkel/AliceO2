@@ -9,6 +9,8 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+// Useless comment
+
 #include <SimConfig/SimConfig.h>
 #include <DetectorsCommonDataFormats/DetID.h>
 #include <boost/program_options.hpp>
@@ -68,7 +70,7 @@ bool SimConfig::resetFromParsedMap(boost::program_options::variables_map const& 
     activeModules.clear();
     for (int d = DetID::First; d <= DetID::Last; ++d) {
 #ifdef ENABLE_UPGRADES
-      if (d != DetID::IT3 && d != DetID::TRK && d != DetID::FT3) {
+      if (d != DetID::IT3 && d != DetID::TRK && d != DetID::FT3 && d != DetID::FCT) {
         activeModules.emplace_back(DetID::getName(d));
       }
 #else

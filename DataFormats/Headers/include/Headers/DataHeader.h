@@ -572,6 +572,7 @@ constexpr o2::header::DataOrigin gDataOriginACO{"ACO"}; // for bwd compatibility
 constexpr o2::header::DataOrigin gDataOriginIT3{"IT3"};
 constexpr o2::header::DataOrigin gDataOriginTRK{"TRK"};
 constexpr o2::header::DataOrigin gDataOriginFT3{"FT3"};
+constexpr o2::header::DataOrigin gDataOriginFCT{"FCT"};
 
 //possible data types
 constexpr o2::header::DataDescription gDataDescriptionAny{"***************"};
