@@ -37,6 +37,7 @@
 #include "TString.h"         // for TString, operator+
 #include "TVirtualMC.h"      // for gMC, TVirtualMC
 #include "TVirtualMCStack.h" // for TVirtualMCStack
+#include "TMath.h"           // for Abs, ATan, Exp, Tan
 
 #include <cstdio> // for NULL, snprintf
 
@@ -95,15 +96,32 @@ void Detector::buildFCTFromFile(std::string configFileName)
   float z_layer, r_in, r_out, Layerx2X0;
   char delimiter;
   int layerNumber = 0;
+  int pseumin = 3;
+  int pseumax = 5;
+  bool r_toggle = false;
+
+
+
   while (std::getline(ifs, tempstr)) {
     if (tempstr[0] == '#') {
       LOG(info) << " Comment: " << tempstr;
+      int loc = tempstr.find("r_toggle");
+      if (tempstr != -1) {
+        r_toggle = true;
+        LOG(info) << " Comment: R toggle activated";
+      }
       continue;
     }
     std::istringstream iss(tempstr);
     iss >> z_layer;
-    iss >> r_in;
-    iss >> r_out;
+    if (r_toggle){
+      auto pseurap_to_ang = [](float eta){return 2. * TMath::ATan(TMath::Exp(-eta));};
+      r_in = TMath::Abs(z_layer) * TMath::Tan(pseurap_to_ang(pseumax));
+      r_out = TMath::Abs(z_layer) * TMath::Tan(pseurap_to_ang(pseumin));
+    } else {
+      iss >> r_in;
+      iss >> r_out;
+    }
     iss >> Layerx2X0;
 
     std::string layerName = GeometryTGeo::getFCTLayerPattern() + std::string("_") + std::to_string(layerNumber);
