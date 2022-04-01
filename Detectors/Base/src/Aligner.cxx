@@ -24,7 +24,8 @@ using DetID = o2::detectors::DetID;
 
 DetID::mask_t Aligner::getDetectorsMask() const
 {
-  return DetID::getMask(mDetectors) & (~DetID::getMask(DetID::CTP));
+  return DetID::getMask(mDetectors) & (~DetID::getMask(DetID::CTP)) & (~DetID::getMask(DetID::FCT));
+  // This is a hack for the FCT. This cannot go to the actual code. For that we will have to communicate with the CCDB.
 }
 
 void Aligner::applyAlignment(long timestamp, DetID::mask_t addMask) const
