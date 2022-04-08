@@ -40,7 +40,7 @@ ClassImp(FCTLayer);
 
 FCTLayer::~FCTLayer() = default;
 
-FCTLayer::FCTLayer(Int_t layerDirection, Int_t layerNumber, std::string layerName, Float_t z, Float_t rIn, Float_t rOut, Float_t Layerx2X0)
+FCTLayer::FCTLayer(Int_t layerDirection, Int_t layerNumber, std::string layerName, Float_t z, Float_t rIn, Float_t rOut_SideL, Float_t Layerx2X0, Int_t type)
 {
   // Creates a simple parametrized EndCap layer covering the given
   // pseudorapidity range at the z layer position
@@ -50,18 +50,38 @@ FCTLayer::FCTLayer(Int_t layerDirection, Int_t layerNumber, std::string layerNam
   mZ = layerDirection ? std::abs(z) : -std::abs(z);
   mx2X0 = Layerx2X0;
   mInnerRadius = rIn;
-  mOuterRadius = rOut;
+  mType = type;
+  if(type == 0) { // Disk
+    mOuterRadius = rOut_SideL;
+  } else if(type == 1) { // Square
+    mSideLength = rOut_SideL;
+  }
   auto Si_X0 = 9.5;
   mChipThickness = Layerx2X0 * Si_X0;
-
-  LOG(info) << "Creating FCT Layer " << mLayerNumber << " ; direction " << mDirection;
-  LOG(info) << "   Using silicon X0 = " << Si_X0 << " to emulate layer radiation length.";
-  LOG(info) << "   Layer z = " << mZ << " ; R_in = " << mInnerRadius << " ; R_out = " << mOuterRadius << " ; x2X0 = " << mx2X0 << " ; ChipThickness = " << mChipThickness;
+  if(mType == 0){
+    LOG(info) << "Creating FCT Disk Layer " << mLayerNumber << " ; direction " << mDirection;
+    LOG(info) << "   Using silicon X0 = " << Si_X0 << " to emulate layer radiation length.";
+    LOG(info) << "   Layer z = " << mZ << " ; R_in = " << mInnerRadius << " ; R_out = " << mOuterRadius << " ; x2X0 = " << mx2X0 << " ; ChipThickness = " << mChipThickness;
+  } else if(mType == 1){
+    LOG(info) << "Creating FCT Square Layer " << mLayerNumber << " ; direction " << mDirection;
+    LOG(info) << "   Using silicon X0 = " << Si_X0 << " to emulate layer radiation length.";
+    LOG(info) << "   Layer z = " << mZ << " ; R_in = " << mInnerRadius << " ; L_side = " << mSideLength << " ; x2X0 = " << mx2X0 << " ; ChipThickness = " << mChipThickness;
+  }
 }
 
 void FCTLayer::createLayer(TGeoVolume* motherVolume)
 {
-  if (mLayerNumber >= 0) {
+  if(mType == 0) {
+    createDiskLayer(motherVolume);
+  } else if(mType == 1) {
+    createSquareLayer(motherVolume);
+  }
+  return;
+}
+
+
+void FCTLayer::createDiskLayer(TGeoVolume* motherVolume){
+ if (mLayerNumber >= 0) {
     // Create tube, set sensitive volume, add to mother volume
 
     std::string chipName = o2::fct::GeometryTGeo::getFCTChipPattern() + std::to_string(mLayerNumber),
@@ -90,6 +110,49 @@ void FCTLayer::createLayer(TGeoVolume* motherVolume)
     LOG(info) << "Inserting " << layerVol->GetName() << " inside " << motherVolume->GetName();
     motherVolume->AddNode(layerVol, 1, FwdDiskCombiTrans);
 
+    return;
+  }
+}
+
+void FCTLayer::createSquareLayer(TGeoVolume* motherVolume){
+  if (mLayerNumber >= 0) {
+
+    LOG(info) << "Constructing a layer and adding it to the motherVolume";
+
+    std::string chipName = o2::fct::GeometryTGeo::getFCTChipPattern() + std::to_string(mLayerNumber),
+                sensName = Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), mDirection, mLayerNumber);
+    TGeoBBox* sensorBox = new TGeoBBox("SensorBox", mSideLength, mSideLength, mChipThickness / 2);
+    TGeoBBox* chipBox = new TGeoBBox("ChipBox", mSideLength, mSideLength, mChipThickness / 2);
+    TGeoBBox* layerBox = new TGeoBBox("LayerBox", mSideLength, mSideLength, mChipThickness / 2);
+
+    TGeoTube* sensorCutout = new TGeoTube("SensorTube", 0., mInnerRadius, mChipThickness / 2);
+    TGeoTube* chipCutout = new TGeoTube("ChipTube", 0., mInnerRadius, mChipThickness / 2);
+    TGeoTube* layerCutout = new TGeoTube("LayerTube", 0., mInnerRadius, mChipThickness / 2);
+
+    TGeoCompositeShape* SensorComp = new TGeoCompositeShape("SensorComp", "SensorBox - SensorTube");
+    TGeoCompositeShape* ChipComp = new TGeoCompositeShape("SensorComp", "ChipBox - ChipTube");
+    TGeoCompositeShape* LayerComp = new TGeoCompositeShape("SensorComp", "LayerBox - LayerTube");
+
+    TGeoMedium* medSi = gGeoManager->GetMedium("FCT_SI$");
+    TGeoMedium* medAir = gGeoManager->GetMedium("FCT_AIR$");
+
+    TGeoVolume* sensVol = new TGeoVolume(sensName.c_str(), SensorComp, medSi);
+    TGeoVolume* chipVol = new TGeoVolume(chipName.c_str(), ChipComp, medSi);
+    TGeoVolume* layerVol = new TGeoVolume(mLayerName.c_str(), LayerComp, medAir);
+
+    LOG(info) << "Inserting " << sensVol->GetName() << " inside " << chipVol->GetName();
+    chipVol->AddNode(sensVol, 1, nullptr);
+
+    LOG(info) << "Inserting " << chipVol->GetName() << " inside " << layerVol->GetName();
+    layerVol->AddNode(chipVol, 1, nullptr);
+
+    // Finally put everything in the mother volume
+    auto* FwdLayerRotation = new TGeoRotation("FwdDiskRotation", 0, 0, 180);
+    auto* FwdLayerCombiTrans = new TGeoCombiTrans(0, 0, mZ, FwdLayerRotation);
+
+    LOG(info) << "Inserting " << layerVol->GetName() << " inside " << motherVolume->GetName();
+    motherVolume->AddNode(layerVol, 1, FwdLayerCombiTrans);
+    
     return;
   }
 }

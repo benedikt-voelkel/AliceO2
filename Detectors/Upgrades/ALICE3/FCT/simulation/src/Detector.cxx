@@ -38,6 +38,8 @@
 #include "TVirtualMC.h"      // for gMC, TVirtualMC
 #include "TVirtualMCStack.h" // for TVirtualMCStack
 #include "TMath.h"           // for Abs, ATan, Exp, Tan
+#include "TCanvas.h"
+#include "TDatime.h"         // for GetDate, GetTime
 
 #include <cstdio> // for NULL, snprintf
 
@@ -67,17 +69,17 @@ void Detector::buildFCTFromFile(std::string configFileName)
 
   /*
   # Sample MFT configuration
-  # z_layer    r_in    r_out   Layerx2X0
-  -45.3       2.5     9.26    0.0042
-  -46.7       2.5     9.26    0.0042
-  -48.6       2.5     9.8     0.0042
-  -50.0       2.5     9.8     0.0042
-  -52.4       2.5     10.43   0.0042
-  -53.8       2.5     10.43   0.0042
-  -67.7       3.82    13.01   0.0042
-  -69.1       3.82    13.01   0.0042
-  -76.1       3.92    14.35   0.0042
-  -77.5       3.92    14.35   0.0042
+  # z_layer    r_in    r_out   Layerx2X0   layerType (0 disks, 1 squares)
+  -45.3       2.5     9.26    0.0042      1
+  -46.7       2.5     9.26    0.0042      1
+  -48.6       2.5     9.8     0.0042      1
+  -50.0       2.5     9.8     0.0042      1
+  -52.4       2.5     10.43   0.0042      1
+  -53.8       2.5     10.43   0.0042      1
+  -67.7       3.82    13.01   0.0042      1
+  -69.1       3.82    13.01   0.0042      1
+  -76.1       3.92    14.35   0.0042      1
+  -77.5       3.92    14.35   0.0042      1
   */
 
   mLayerName.clear();
@@ -93,11 +95,14 @@ void Detector::buildFCTFromFile(std::string configFileName)
     LOG(fatal) << " Invalid FCTBase.configFile!";
   }
   std::string tempstr;
-  float z_layer, r_in, r_out, Layerx2X0;
+  float z_layer, r_in, r_out_l_side, Layerx2X0;
   char delimiter;
   int layerNumber = 0;
+  int layerNumberSquare = 0;
+  int layerNumberDisk = 0;
   int pseumin = 3;
   int pseumax = 5;
+  int layerType;
   bool r_toggle = false;
 
 
@@ -106,33 +111,44 @@ void Detector::buildFCTFromFile(std::string configFileName)
     if (tempstr[0] == '#') {
       LOG(info) << " Comment: " << tempstr;
       int loc = tempstr.find("r_toggle");
-      if (tempstr != -1) {
+      if (loc != -1) {
         r_toggle = true;
         LOG(info) << " Comment: R toggle activated";
       }
       continue;
     }
     std::istringstream iss(tempstr);
+    iss >> layerType;
     iss >> z_layer;
-    if (r_toggle){
+    if(r_toggle){
       auto pseurap_to_ang = [](float eta){return 2. * TMath::ATan(TMath::Exp(-eta));};
       r_in = TMath::Abs(z_layer) * TMath::Tan(pseurap_to_ang(pseumax));
-      r_out = TMath::Abs(z_layer) * TMath::Tan(pseurap_to_ang(pseumin));
+      r_out_l_side = TMath::Abs(z_layer) * TMath::Tan(pseurap_to_ang(pseumin));
     } else {
       iss >> r_in;
-      iss >> r_out;
+      iss >> r_out_l_side;
     }
     iss >> Layerx2X0;
+    
 
     std::string layerName = GeometryTGeo::getFCTLayerPattern() + std::string("_") + std::to_string(layerNumber);
     mLayerName[0].push_back(layerName);
-    LOG(info) << "Adding Layer " << layerName << " at z = " << z_layer << " ; r_in = " << r_in << " ; r_out = " << r_out << " x/X0 = " << Layerx2X0;
-    auto& thisLayer = mLayers[0].emplace_back(0, layerNumber, layerName, z_layer, r_in, r_out, Layerx2X0);
+    if(layerType == 0){
+      LOG(info) << "Adding Disk Layer " << layerName << " at z = " << z_layer << " ; r_in = " << r_in << " ; r_out = " << r_out_l_side << " x/X0 = " << Layerx2X0;
+      layerNumberDisk++;
+    } else if(layerType == 1){
+      LOG(info) << "Adding Square Layer " << layerName << " at z = " << z_layer << " ; r_in = " << r_in << " ; l_side = " << r_out_l_side << " x/X0 = " << Layerx2X0;
+      layerNumberSquare++;
+    }
+    
+    auto& thisLayer = mLayers[0].emplace_back(0, layerNumber, layerName, z_layer, r_in, r_out_l_side, Layerx2X0, layerType);
     layerNumber++;
   }
 
   mNumberOfLayers = layerNumber;
   LOG(info) << " Loaded FCT Detector with  " << mNumberOfLayers << " layers";
+  LOG(info) << " Of which " << layerNumberDisk << " are disks";
+  LOG(info) << " Of which " << layerNumberSquare << " are disks";
 }
 
 //_________________________________________________________________________________________________
@@ -150,10 +166,14 @@ void Detector::exportLayout()
     printf("Cannot open file\n");
     return;
   }
-  fOut << "#   z_layer   r_in   r_out   Layerx2X0" << std::endl;
+  fOut << "#   z_layer   r_in   r_out_l_side   Layerx2X0" << std::endl;
   for (auto layers_dir : mLayers) {
     for (auto layer : layers_dir) {
-      fOut << layer.getZ() << "  " << layer.getInnerRadius() << "  " << layer.getOuterRadius() << "  " << layer.getx2X0() << std::endl;
+      if(layer.getType() == 0){
+        fOut << layer.getZ() << "  " << layer.getInnerRadius() << "  " << layer.getOuterRadius() << "  " << layer.getx2X0() << std::endl;
+      } else if(layer.getType() == 1){
+        fOut << layer.getZ() << "  " << layer.getInnerRadius() << "  " << layer.getSideLength() << "  " << layer.getx2X0() << std::endl;
+      }
     }
   }
 }
@@ -177,6 +197,7 @@ void Detector::buildBasicFCT(const FCTBaseParam& param)
   mLayerName[1].resize(mNumberOfLayers);
   mLayerID.clear();
   mLayers.resize(2);
+  Int_t type = 0; // Disk
 
   for (Int_t direction : {0, 1}) {
     for (Int_t layerNumber = 0; layerNumber < mNumberOfLayers; layerNumber++) {
@@ -187,7 +208,7 @@ void Detector::buildBasicFCT(const FCTBaseParam& param)
       Float_t layerZ = z_first + (layerNumber * z_length / (mNumberOfLayers - 1)) * std::copysign(1, z_first);
       Float_t rIn = std::abs(layerZ * std::tan(2.f * std::atan(std::exp(-etaIn))));
       Float_t rOut = std::abs(layerZ * std::tan(2.f * std::atan(std::exp(-etaOut))));
-      auto& thisLayer = mLayers[direction].emplace_back(direction, layerNumber, layerName, layerZ, rIn, rOut, Layerx2X0);
+      auto& thisLayer = mLayers[direction].emplace_back(direction, layerNumber, layerName, layerZ, rIn, rOut, Layerx2X0, type);
     }
   }
 }
@@ -222,6 +243,7 @@ void Detector::buildFCTV1()
   mLayerName[1].resize(mNumberOfLayers);
   mLayerID.clear();
   mLayers.resize(2);
+  Int_t type = 0; // Disk
 
   for (auto direction : {0, 1}) {
     for (int layerNumber = 0; layerNumber < mNumberOfLayers; layerNumber++) {
@@ -236,7 +258,7 @@ void Detector::buildFCTV1()
 
       LOG(info) << "Adding Layer " << layerName << " at z = " << z;
       // Add layers
-      auto& thisLayer = mLayers[direction].emplace_back(direction, layerNumber, layerName, z, rIn, rOut, x0);
+      auto& thisLayer = mLayers[direction].emplace_back(direction, layerNumber, layerName, z, rIn, rOut, x0, type);
     }
   }
 }
@@ -562,6 +584,14 @@ void Detector::createGeometry()
       LOG(info) << "  mLayerID[" << iLayer << "] = " << layerID;
     }
   }
+  TCanvas *c1 = new TCanvas();
+  volFCT->Draw();
+  TString output_path = "/misc/alidata131/alice_u/cas/O2/Schematic_layouts/";
+  TDatime* time = new TDatime();
+  TString output_name = "FCT_Layout_";
+  output_name.Append(Form("%d_%d.root", time->GetDate(), time->GetTime()));
+  output_path.Append(output_name);
+  c1->Print(output_path);
 }
 
 //_________________________________________________________________________________________________

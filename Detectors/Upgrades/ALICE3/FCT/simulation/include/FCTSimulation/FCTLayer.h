@@ -34,8 +34,8 @@ class FCTLayer : public TObject
   // Default constructor
   FCTLayer() = default;
 
-  // Sample layer constructor
-  FCTLayer(Int_t layerDirection, Int_t layerNumber, std::string layerName, Float_t z, Float_t rIn, Float_t rOut, Float_t Layerx2X0);
+  // Sample layer constructor, for disk and square layers (since they have the same parameters, but a different shape. Differentiate by filling in the type)
+  FCTLayer(Int_t layerDirection, Int_t layerNumber, std::string layerName, Float_t z, Float_t rIn, Float_t rOut_SideL, Float_t Layerx2X0, Int_t type);
 
   /// Copy constructor
   FCTLayer(const FCTLayer&) = default;
@@ -49,6 +49,8 @@ class FCTLayer : public TObject
   /// getters
   auto getInnerRadius() const { return mInnerRadius; }
   auto getOuterRadius() const { return mOuterRadius; }
+  auto getSideLength() const { return mSideLength; }
+  auto getType() const { return mType; }
   auto getZ() const { return mZ; }
   auto getx2X0() const { return mx2X0; }
 
@@ -59,12 +61,17 @@ class FCTLayer : public TObject
  private:
   Int_t mLayerNumber = -1;   ///< Current layer number
   Int_t mDirection;          ///< Layer direction 0=Forward 1 = Backward
+  Int_t mType;               ///< Layer type. 0: Disk, 1: square
   std::string mLayerName;    ///< Current layer name
   Double_t mInnerRadius;     ///< Inner radius of this layer
-  Double_t mOuterRadius;     ///< Outer radius of this layer
+  Double_t mOuterRadius;     ///< Outer radius of this disk layer
+  Double_t mSideLength;      ///< Side length of this square layer
   Double_t mZ;               ///< Z position of the layer
   Double_t mChipThickness;   ///< Chip thickness
   Double_t mx2X0;            ///< Layer material budget x/X0
+
+  virtual void createDiskLayer(TGeoVolume* motherVolume);
+  virtual void createSquareLayer(TGeoVolume* motherVolume);
 
   ClassDefOverride(FCTLayer, 0); // ALICE 3 EndCaps geometry
 };
