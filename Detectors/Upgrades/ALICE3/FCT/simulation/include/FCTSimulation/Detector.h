@@ -121,7 +121,7 @@ class Detector : public o2::base::DetImpl<Detector>
 
  protected:
   std::vector<Int_t> mLayerID;
-  std::vector<std::vector<TString>> mLayerName;
+  std::vector<TString> mLayerName;
   Int_t mNumberOfLayers;
 
  private:
@@ -150,7 +150,7 @@ class Detector : public o2::base::DetImpl<Detector>
 
   Detector& operator=(const Detector&);
 
-  std::vector<std::vector<FCTLayer>> mLayers;
+  std::vector<FCTLayer> mBackwardLayers;
   bool mIsPipeActivated = true; //! If Alice 3 pipe is present append inner disks to vacuum volume to avoid overlaps
 
   template <typename Det>
