@@ -83,10 +83,8 @@ void Detector::buildFCTFromFile(std::string configFileName)
   */
 
   mLayerName.clear();
-  mLayers.clear();
+  mBackwardLayers.clear();
   mLayerID.clear();
-  mLayerName.resize(1);
-  mLayers.resize(1);
 
   LOG(info) << "Building FCT Detector: From file";
   LOG(info) << "   FCT detector configuration: " << configFileName;
@@ -105,13 +103,11 @@ void Detector::buildFCTFromFile(std::string configFileName)
   int layerType;
   bool r_toggle = false;
 
-
-
   while (std::getline(ifs, tempstr)) {
     if (tempstr[0] == '#') {
       LOG(info) << " Comment: " << tempstr;
-      int loc = tempstr.find("r_toggle");
-      if (loc != -1) {
+      int loc_r_toggle = tempstr.find("r_toggle");
+      if (loc_r_toggle != -1) {
         r_toggle = true;
         LOG(info) << " Comment: R toggle activated";
       }
@@ -132,7 +128,7 @@ void Detector::buildFCTFromFile(std::string configFileName)
     
 
     std::string layerName = GeometryTGeo::getFCTLayerPattern() + std::string("_") + std::to_string(layerNumber);
-    mLayerName[0].push_back(layerName);
+    mLayerName.push_back(layerName);
     if(layerType == 0){
       LOG(info) << "Adding Disk Layer " << layerName << " at z = " << z_layer << " ; r_in = " << r_in << " ; r_out = " << r_out_l_side << " x/X0 = " << Layerx2X0;
       layerNumberDisk++;
@@ -141,7 +137,7 @@ void Detector::buildFCTFromFile(std::string configFileName)
       layerNumberSquare++;
     }
     
-    auto& thisLayer = mLayers[0].emplace_back(0, layerNumber, layerName, z_layer, r_in, r_out_l_side, Layerx2X0, layerType);
+    auto& thisLayer = mBackwardLayers.emplace_back(0, layerNumber, layerName, z_layer, r_in, r_out_l_side, Layerx2X0, layerType);
     layerNumber++;
   }
 
@@ -157,23 +153,25 @@ void Detector::exportLayout()
   // Export FCT Layout description to file. One line per disk
   // z_layer r_in r_out Layerx2X0
 
-  std::string configFileName = "FCT_layout.cfg";
+  TDatime* time = new TDatime();
+  TString configFileName = "FCT_layout_";
+  configFileName.Append(Form("%d.cfg", time->GetTime()));
+
+  //std::string configFileName = "FCT_layout.cfg";
 
   LOG(info) << "Exporting FCT Detector layout to " << configFileName;
 
-  std::ofstream fOut(configFileName.c_str(), std::ios::out);
+  std::ofstream fOut(configFileName, std::ios::out);
   if (!fOut) {
     printf("Cannot open file\n");
     return;
   }
   fOut << "#   z_layer   r_in   r_out_l_side   Layerx2X0" << std::endl;
-  for (auto layers_dir : mLayers) {
-    for (auto layer : layers_dir) {
-      if(layer.getType() == 0){
-        fOut << layer.getZ() << "  " << layer.getInnerRadius() << "  " << layer.getOuterRadius() << "  " << layer.getx2X0() << std::endl;
-      } else if(layer.getType() == 1){
-        fOut << layer.getZ() << "  " << layer.getInnerRadius() << "  " << layer.getSideLength() << "  " << layer.getx2X0() << std::endl;
-      }
+  for (auto layer :  mBackwardLayers) {
+    if(layer.getType() == 0){
+      fOut << layer.getZ() << "  " << layer.getInnerRadius() << "  " << layer.getOuterRadius() << "  " << layer.getx2X0() << std::endl;
+    } else if(layer.getType() == 1){
+      fOut << layer.getZ() << "  " << layer.getInnerRadius() << "  " << layer.getSideLength() << "  " << layer.getx2X0() << std::endl;
     }
   }
 }
@@ -192,24 +190,19 @@ void Detector::buildBasicFCT(const FCTBaseParam& param)
   auto etaOut = param.etaOut;
   auto Layerx2X0 = param.Layerx2X0;
   mNumberOfLayers = param.nLayers;
-  mLayerName.resize(2);
-  mLayerName[0].resize(mNumberOfLayers);
-  mLayerName[1].resize(mNumberOfLayers);
   mLayerID.clear();
-  mLayers.resize(2);
+
   Int_t type = 0; // Disk
 
-  for (Int_t direction : {0, 1}) {
-    for (Int_t layerNumber = 0; layerNumber < mNumberOfLayers; layerNumber++) {
-      std::string layerName = GeometryTGeo::getFCTLayerPattern() + std::to_string(layerNumber + mNumberOfLayers * direction);
-      mLayerName[direction][layerNumber] = layerName;
+  for (Int_t layerNumber = 0; layerNumber < mNumberOfLayers; layerNumber++) {
+    std::string layerName = GeometryTGeo::getFCTLayerPattern() + std::to_string(layerNumber); // + mNumberOfLayers * direction);
+    mLayerName[layerNumber] = layerName;
 
-      // Adds evenly spaced layers
-      Float_t layerZ = z_first + (layerNumber * z_length / (mNumberOfLayers - 1)) * std::copysign(1, z_first);
-      Float_t rIn = std::abs(layerZ * std::tan(2.f * std::atan(std::exp(-etaIn))));
-      Float_t rOut = std::abs(layerZ * std::tan(2.f * std::atan(std::exp(-etaOut))));
-      auto& thisLayer = mLayers[direction].emplace_back(direction, layerNumber, layerName, layerZ, rIn, rOut, Layerx2X0, type);
-    }
+    // Adds evenly spaced layers
+    Float_t layerZ = z_first + (layerNumber * z_length / (mNumberOfLayers - 1)) * std::copysign(1, z_first);
+    Float_t rIn = std::abs(layerZ * std::tan(2.f * std::atan(std::exp(-etaIn))));
+    Float_t rOut = std::abs(layerZ * std::tan(2.f * std::atan(std::exp(-etaOut))));
+    auto& thisLayer = mBackwardLayers.emplace_back(0, layerNumber, layerName, layerZ, rIn, rOut, Layerx2X0, type);
   }
 }
 
@@ -221,6 +214,7 @@ void Detector::buildFCTV1()
   //Build FCT detector according to
   //<Insert link here>
 
+  LOG(info) << "This confirms our suspicion";
   LOG(info) << "Building FCT Detector: V1";
 
   mNumberOfLayers = 10;
@@ -238,28 +232,23 @@ void Detector::buildFCTV1()
     {220., 3.5, 100., layersx2X0},
     {279., 3.5, 100., layersx2X0}};
 
-  mLayerName.resize(2);
-  mLayerName[0].resize(mNumberOfLayers);
-  mLayerName[1].resize(mNumberOfLayers);
   mLayerID.clear();
-  mLayers.resize(2);
+
   Int_t type = 0; // Disk
 
-  for (auto direction : {0, 1}) {
-    for (int layerNumber = 0; layerNumber < mNumberOfLayers; layerNumber++) {
-      std::string directionName = std::to_string(direction);
-      std::string layerName = GeometryTGeo::getFCTLayerPattern() + directionName + std::string("_") + std::to_string(layerNumber);
-      mLayerName[direction][layerNumber] = layerName;
-      auto& z = layersConfig[layerNumber][0];
+  for (int layerNumber = 0; layerNumber < mNumberOfLayers; layerNumber++) {
+    std::string directionName = std::to_string(0);
+    std::string layerName = GeometryTGeo::getFCTLayerPattern() + directionName + std::string("_") + std::to_string(layerNumber);
+    mLayerName[layerNumber] = layerName;
+    auto& z = layersConfig[layerNumber][0];
 
-      auto& rIn = layersConfig[layerNumber][1];
-      auto& rOut = layersConfig[layerNumber][2];
-      auto& x0 = layersConfig[layerNumber][3];
+    auto& rIn = layersConfig[layerNumber][1];
+    auto& rOut = layersConfig[layerNumber][2];
+    auto& x0 = layersConfig[layerNumber][3];
 
-      LOG(info) << "Adding Layer " << layerName << " at z = " << z;
-      // Add layers
-      auto& thisLayer = mLayers[direction].emplace_back(direction, layerNumber, layerName, z, rIn, rOut, x0, type);
-    }
+    LOG(info) << "Adding Layer " << layerName << " at z = " << z;
+    // Add layers
+    auto& thisLayer = mBackwardLayers.emplace_back(0, layerNumber, layerName, z, rIn, rOut, x0, type);
   }
 }
 
@@ -270,27 +259,6 @@ Detector::Detector(Bool_t active)
     mHits(o2::utils::createSimVector<o2::itsmft::Hit>())
 {
 
-  // FCT Base configuration parameters
-  auto& fctBaseParam = FCTBaseParam::Instance();
-
-  if (fctBaseParam.configFile != "") {
-    LOG(info) << "FCT Geometry configuration file provided. Overriding FCTBase.geoModel configuration.";
-    buildFCTFromFile(fctBaseParam.configFile);
-
-  } else {
-    switch (fctBaseParam.geoModel) {
-      case Default:
-        buildFCTV1(); // FCTV1
-        break;
-      case Telescope:
-        buildBasicFCT(fctBaseParam); // BasicFCT = Parametrized telescopic detector (equidistant layers)
-        break;
-      default:
-        LOG(fatal) << "Invalid Geometry.\n";
-        break;
-    }
-  }
-  exportLayout();
 }
 
 //_________________________________________________________________________________________________
@@ -337,7 +305,7 @@ Detector& Detector::operator=(const Detector& rhs)
   mLayerID = rhs.mLayerID;
   mLayerName = rhs.mLayerName;
   mNumberOfLayers = rhs.mNumberOfLayers;
-  mLayers = rhs.mLayers;
+  mBackwardLayers = rhs.mBackwardLayers;
   mTrackData = rhs.mTrackData;
 
   /// Container for data points
@@ -491,6 +459,28 @@ void Detector::Reset()
 //_________________________________________________________________________________________________
 void Detector::ConstructGeometry()
 {
+  // FCT Base configuration parameters
+  auto& fctBaseParam = FCTBaseParam::Instance();
+
+  // Set the parameters for the detector layout
+  if (fctBaseParam.configFile != "") {
+    LOG(info) << "FCT Geometry configuration file provided. Overriding FCTBase.geoModel configuration.";
+    buildFCTFromFile(fctBaseParam.configFile);
+  } else {
+    switch (fctBaseParam.geoModel) {
+      case Default:
+        buildFCTV1(); // FCTV1
+        break;
+      case Telescope:
+        buildBasicFCT(fctBaseParam); // BasicFCT = Parametrized telescopic detector (equidistant layers)
+        break;
+      default:
+        LOG(fatal) << "Invalid Geometry.\n";
+        break;
+    }
+  }
+  exportLayout();
+
   // Create detector materials
   createMaterials();
 
@@ -522,68 +512,30 @@ void Detector::createGeometry()
   LOG(debug) << "FCT createGeometry: "
              << Form("gGeoManager name is %s title is %s", gGeoManager->GetName(), gGeoManager->GetTitle());
 
-  if (mLayers.size() == 2) { // V1 and telescope
-    if (!A3IPvac) {
-      for (Int_t direction : {0, 1}) { // Backward layers at mLayers[0]; Forward layers at mLayers[1]
-        std::string directionString = direction ? "Forward" : "Backward";
-        LOG(info) << "Creating FCT " << directionString << " layers:";
-        for (Int_t iLayer = 0; iLayer < mLayers[direction].size(); iLayer++) {
-          mLayers[direction][iLayer].createLayer(volFCT);
-        }
-      }
-      vALIC->AddNode(volFCT, 2, new TGeoTranslation(0., 30., 0.));
-    } else { // If beampipe is enabled append inner disks to beampipe filling volume, this should be temporary.
-      for (Int_t direction : {0, 1}) {
-        std::string directionString = direction ? "Forward" : "Backward";
-        LOG(info) << "Creating FCT " << directionString << " layers:";
-        for (Int_t iLayer = 0; iLayer < mLayers[direction].size(); iLayer++) {
-          if (iLayer < 3) {
-            mLayers[direction][iLayer].createLayer(volIFCT);
-          } else {
-            mLayers[direction][iLayer].createLayer(volFCT);
-          }
-        }
-      }
-      A3IPvac->AddNode(volIFCT, 2, new TGeoTranslation(0., 0., 0.));
-      vALIC->AddNode(volFCT, 2, new TGeoTranslation(0., 30., 0.));
-    }
-
-    for (auto direction : {0, 1}) {
-      std::string directionString = direction ? "Forward" : "Backward";
-      LOG(info) << "Registering FCT " << directionString << " LayerIDs:";
-      for (int iLayer = 0; iLayer < mLayers[direction].size(); iLayer++) {
-        auto layerID = gMC ? TVirtualMC::GetMC()->VolId(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), direction, iLayer)) : 0;
-        mLayerID.push_back(layerID);
-        LOG(info) << " " << directionString << " layer " << iLayer << " LayerID " << layerID;
+  LOG(info) << "Creating FCT layers:";
+  if (A3IPvac) {
+    for (Int_t iLayer = 0; iLayer < mBackwardLayers.size(); iLayer++) {
+      if (std::abs(mBackwardLayers[iLayer].getZ()) < 25) {
+        mBackwardLayers[iLayer].createLayer(volIFCT);
+      } else {
+        mBackwardLayers[iLayer].createLayer(volFCT);
       }
     }
+    A3IPvac->AddNode(volIFCT, 2, new TGeoTranslation(0., 0., 0.));
+    vALIC->AddNode(volFCT, 2, new TGeoTranslation(0., 30., 0.));
+  } else {
+    for (Int_t iLayer = 0; iLayer < mBackwardLayers.size(); iLayer++) {
+      mBackwardLayers[iLayer].createLayer(volFCT);
+    }
+    vALIC->AddNode(volFCT, 2, new TGeoTranslation(0., 30., 0.));
   }
-
-  if (mLayers.size() == 1) { // All layers registered at mLayers[0], used when building from file
-    LOG(info) << "Creating FCT layers:";
-    if (A3IPvac) {
-      for (Int_t iLayer = 0; iLayer < mLayers[0].size(); iLayer++) {
-        if (std::abs(mLayers[0][iLayer].getZ()) < 25) {
-          mLayers[0][iLayer].createLayer(volIFCT);
-        } else {
-          mLayers[0][iLayer].createLayer(volFCT);
-        }
-      }
-      A3IPvac->AddNode(volIFCT, 2, new TGeoTranslation(0., 0., 0.));
-      vALIC->AddNode(volFCT, 2, new TGeoTranslation(0., 30., 0.));
-    } else {
-      for (Int_t iLayer = 0; iLayer < mLayers[0].size(); iLayer++) {
-        mLayers[0][iLayer].createLayer(volFCT);
-      }
-      vALIC->AddNode(volFCT, 2, new TGeoTranslation(0., 30., 0.));
-    }
-    LOG(info) << "Registering FCT LayerIDs:";
-    for (int iLayer = 0; iLayer < mLayers[0].size(); iLayer++) {
-      auto layerID = gMC ? TVirtualMC::GetMC()->VolId(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), 0, iLayer)) : 0;
-      mLayerID.push_back(layerID);
-      LOG(info) << "  mLayerID[" << iLayer << "] = " << layerID;
-    }
+  LOG(info) << "Registering FCT LayerIDs:";
+  for (int iLayer = 0; iLayer < mBackwardLayers.size(); iLayer++) {
+    auto layerID = gMC ? TVirtualMC::GetMC()->VolId(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), 0, iLayer)) : 0;
+    mLayerID.push_back(layerID);
+    LOG(info) << "  mLayerID[" << iLayer << "] = " << layerID;
   }
+  
   TCanvas *c1 = new TCanvas();
   volFCT->Draw();
   TString output_path = "/misc/alidata131/alice_u/cas/O2/Schematic_layouts/";
@@ -604,24 +556,11 @@ void Detector::defineSensitiveVolumes()
   LOG(info) << "Adding FCT Sensitive Volumes";
 
   // The names of the FCT sensitive volumes have the format: FCTSensor_(0,1)_(0...sNumberLayers-1)
-  if (mLayers.size() == 2) {
-    for (Int_t direction : {0, 1}) {
-      for (Int_t iLayer = 0; iLayer < mNumberOfLayers; iLayer++) {
-        volumeName = o2::fct::GeometryTGeo::getFCTSensorPattern() + std::to_string(iLayer);
-        v = geoManager->GetVolume(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), direction, iLayer));
-        LOG(info) << "Adding FCT Sensitive Volume => " << v->GetName();
-        AddSensitiveVolume(v);
-      }
-    }
-  }
-
-  if (mLayers.size() == 1) {
-    for (Int_t iLayer = 0; iLayer < mLayers[0].size(); iLayer++) {
-      volumeName = o2::fct::GeometryTGeo::getFCTSensorPattern() + std::to_string(iLayer);
-      v = geoManager->GetVolume(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), 0, iLayer));
-      LOG(info) << "Adding FCT Sensitive Volume => " << v->GetName();
-      AddSensitiveVolume(v);
-    }
+  for (Int_t iLayer = 0; iLayer < mBackwardLayers.size(); iLayer++) {
+    volumeName = o2::fct::GeometryTGeo::getFCTSensorPattern() + std::to_string(iLayer);
+    v = geoManager->GetVolume(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), 0, iLayer));
+    LOG(info) << "Adding FCT Sensitive Volume => " << v->GetName();
+    AddSensitiveVolume(v);
   }
 }
 
