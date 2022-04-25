@@ -84,6 +84,7 @@ void Detector::buildFCTFromFile(std::string configFileName)
 
   mLayerName.clear();
   mBackwardLayers.clear();
+  mConverterLayers.clear();
   mLayerID.clear();
 
   LOG(info) << "Building FCT Detector: From file";
@@ -202,7 +203,7 @@ void Detector::buildBasicFCT(const FCTBaseParam& param)
 
   for (Int_t layerNumber = 0; layerNumber < mNumberOfLayers; layerNumber++) {
     std::string layerName = GeometryTGeo::getFCTLayerPattern() + std::to_string(layerNumber); // + mNumberOfLayers * direction);
-    mLayerName[layerNumber] = layerName;
+    mLayerName.push_back(layerName);
 
     // Adds evenly spaced layers
     Float_t layerZ = z_first + (layerNumber * z_length / (mNumberOfLayers - 1)) * std::copysign(1, z_first);
@@ -215,42 +216,46 @@ void Detector::buildBasicFCT(const FCTBaseParam& param)
 //_________________________________________________________________________________________________
 void Detector::buildFCTV1()
 {
-  //Build FT3 detector according to
-  //https://indico.cern.ch/event/992488/contributions/4174473/attachments/2168881/3661331/tracker_parameters_werner_jan_11_2021.pdf
-  //Build FCT detector according to
-  //<Insert link here>
+  //Build default FCT detector
 
-  LOG(info) << "This confirms our suspicion";
   LOG(info) << "Building FCT Detector: V1";
 
-  mNumberOfLayers = 10;
-  Float_t sensorThickness = 30.e-4;
+  mNumberOfLayers = 9;
   Float_t layersx2X0 = 1.e-2;
-  std::vector<std::array<Float_t, 5>> layersConfig{
-    {26., .5, 3., 0.1f * layersx2X0}, // {z_layer, r_in, r_out, Layerx2X0}
-    {30., .5, 3., 0.1f * layersx2X0},
-    {34., .5, 3., 0.1f * layersx2X0},
-    {77., 3.5, 35., layersx2X0},
-    {100., 3.5, 35., layersx2X0},
-    {122., 3.5, 35., layersx2X0},
-    {150., 3.5, 100., layersx2X0},
-    {180., 3.5, 100., layersx2X0},
-    {220., 3.5, 100., layersx2X0},
-    {279., 3.5, 100., layersx2X0}};
+
+  LOG(info) << "Does message 1 appear?";
+
+  std::vector<std::array<Float_t, 4>> layersConfig{
+    {-442.0, 6.0, 44.1, layersx2X0}, // {z_layer, r_in, r_out, Layerx2X0}
+    {-444.0, 6.0, 44.3, layersx2X0},
+    {-446.0, 6.0, 44.5, layersx2X0},
+    {-448.0, 6.0, 44.7, layersx2X0},
+    {-450.0, 6.1, 44.9, layersx2X0},
+    {-460.0, 6.2, 45.9, layersx2X0},
+    {-470.0, 6.3, 46.9, layersx2X0},
+    {-480.0, 6.5, 47.9, layersx2X0},
+    {-490.0, 6.6, 48.9, layersx2X0}};
+
+  LOG(info) << "Does message 2 appear?";
 
   mLayerID.clear();
+  mLayerName.clear();
+  mBackwardLayers.clear();
+
+  LOG(info) << "Does message 3 appear?";
 
   Int_t type = 0; // Disk
 
   for (int layerNumber = 0; layerNumber < mNumberOfLayers; layerNumber++) {
     std::string directionName = std::to_string(0);
     std::string layerName = GeometryTGeo::getFCTLayerPattern() + directionName + std::string("_") + std::to_string(layerNumber);
-    mLayerName[layerNumber] = layerName;
-    auto& z = layersConfig[layerNumber][0];
+    LOG(info) << "Does message" << 4 + layerNumber << "appear?";
+    mLayerName.push_back(layerName);
+    Float_t z = layersConfig[layerNumber][0];
 
-    auto& rIn = layersConfig[layerNumber][1];
-    auto& rOut = layersConfig[layerNumber][2];
-    auto& x0 = layersConfig[layerNumber][3];
+    Float_t rIn = layersConfig[layerNumber][1];
+    Float_t rOut = layersConfig[layerNumber][2];
+    Float_t x0 = layersConfig[layerNumber][3];
 
     LOG(info) << "Adding Layer " << layerName << " at z = " << z;
     // Add layers
