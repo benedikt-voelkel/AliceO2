@@ -50,6 +50,7 @@ class FCTLayer : public TObject
   auto getInnerRadius() const { return mInnerRadius; }
   auto getOuterRadius() const { return mOuterRadius; }
   auto getSideLength() const { return mSideLength; }
+  auto getLayerNumber() const {return mLayerNumber; }
   auto getType() const { return mType; }
   auto getZ() const { return mZ; }
   auto getx2X0() const { return mx2X0; }
@@ -59,19 +60,20 @@ class FCTLayer : public TObject
   virtual void createLayer(TGeoVolume* motherVolume);
 
  private:
-  Int_t mLayerNumber = -1;   ///< Current layer number
-  Int_t mDirection;          ///< Layer direction 0=Forward 1 = Backward
-  Int_t mType;               ///< Layer type. 0: Disk, 1: square
-  std::string mLayerName;    ///< Current layer name
-  Double_t mInnerRadius;     ///< Inner radius of this layer
-  Double_t mOuterRadius;     ///< Outer radius of this disk layer
-  Double_t mSideLength;      ///< Side length of this square layer
-  Double_t mZ;               ///< Z position of the layer
-  Double_t mChipThickness;   ///< Chip thickness
-  Double_t mx2X0;            ///< Layer material budget x/X0
+  Int_t mLayerNumber = -1;          ///< Current layer number (converter layers have layer numbers too, but they get their own vector of instances, mBackwardLayers)
+  Int_t mDirection;                 ///< Layer direction 0=Forward 1 = Backward
+  Int_t mType;                      ///< Layer type. 0: Disk, 1: square, 2: passive disk converter
+  std::string mLayerName;           ///< Current layer name
+  Double_t mInnerRadius;            ///< Inner radius of this layer
+  Double_t mOuterRadius;            ///< Outer radius of this disk layer
+  Double_t mSideLength;             ///< Side length of this square layer
+  Double_t mZ;                      ///< Z position of the layer
+  Double_t mChipThickness;          ///< Chip thickness
+  Double_t mx2X0;                    ///< Layer material budget x/X0
 
   virtual void createDiskLayer(TGeoVolume* motherVolume);
   virtual void createSquareLayer(TGeoVolume* motherVolume);
+  virtual void createConverterLayer(TGeoVolume* motherVolume);
 
   ClassDefOverride(FCTLayer, 0); // ALICE 3 EndCaps geometry
 };

@@ -135,9 +135,15 @@ void Detector::buildFCTFromFile(std::string configFileName)
     } else if(layerType == 1){
       LOG(info) << "Adding Square Layer " << layerName << " at z = " << z_layer << " ; r_in = " << r_in << " ; l_side = " << r_out_l_side << " x/X0 = " << Layerx2X0;
       layerNumberSquare++;
+    } else if(layerType == 2){
+      LOG(info) << "Adding passive converter Layer " << layerName << " at z = " << z_layer << " ; r_in = " << r_in << " ; r_out = " << r_out_l_side << " x/X0 = " << Layerx2X0;
     }
-    
-    auto& thisLayer = mBackwardLayers.emplace_back(0, layerNumber, layerName, z_layer, r_in, r_out_l_side, Layerx2X0, layerType);
+
+    if(layerType == 0 || layerType == 1){
+      auto& thisLayer = mBackwardLayers.emplace_back(0, layerNumber, layerName, z_layer, r_in, r_out_l_side, Layerx2X0, layerType);
+    } else if(layerType == 2){
+      auto& thisLayer = mConverterLayers.emplace_back(0, layerNumber, layerName, z_layer, r_in, r_out_l_side, Layerx2X0, layerType);
+    }
     layerNumber++;
   }
 
@@ -420,6 +426,12 @@ void Detector::createMaterials()
   Float_t epsilAir = 1.0E-4;      // .10000E+01;
   Float_t stminAir = 0.0;         // cm "Default value used"
 
+  Float_t tmaxfdPb = 10.;    // .10000E+01; // Degree
+  Float_t stemaxPb = 0.01; //  .10000E+01; // cm
+  Float_t deemaxPb = 0.1;    // .10000E+01; // Fraction of particle's energy 0<deemax<=1
+  Float_t epsilPb = 0.1;  // .10000E+01;
+  Float_t stminPb = 0.0;     // cm "Default value used"
+
   // AIR
   Float_t aAir[4] = {12.0107, 14.0067, 15.9994, 39.948};
   Float_t zAir[4] = {6., 7., 8., 18.};
@@ -429,8 +441,14 @@ void Detector::createMaterials()
   o2::base::Detector::Mixture(1, "AIR$", aAir, zAir, dAir, 4, wAir);
   o2::base::Detector::Medium(1, "AIR$", 1, 0, ifield, fieldm, tmaxfdAir, stemaxAir, deemaxAir, epsilAir, stminAir);
 
+  // Add Silicon
   o2::base::Detector::Material(3, "SI$", 0.28086E+02, 0.14000E+02, 0.23300E+01, 0.93600E+01, 0.99900E+03);
   o2::base::Detector::Medium(3, "SI$", 3, 0, ifield, fieldm, tmaxfdSi, stemaxSi, deemaxSi, epsilSi, stminSi);
+
+  // Add Lead (copied from EMCAL)
+  o2::base::Detector::Material(2, "Pb$", 207.2, 82, 11.35, 0.56, 0.);
+  o2::base::Detector::Medium(2, "Pb$", 2, 0, ifield, fieldm, tmaxfdPb, stemaxPb, deemaxPb, epsilPb, stminPb);
+
 }
 
 //_________________________________________________________________________________________________
@@ -527,13 +545,16 @@ void Detector::createGeometry()
     for (Int_t iLayer = 0; iLayer < mBackwardLayers.size(); iLayer++) {
       mBackwardLayers[iLayer].createLayer(volFCT);
     }
+    for(Int_t iLayer = 0; iLayer < mConverterLayers.size(); iLayer++) {
+      mConverterLayers[iLayer].createLayer(volFCT);
+    }
     vALIC->AddNode(volFCT, 2, new TGeoTranslation(0., 30., 0.));
   }
-  LOG(info) << "Registering FCT LayerIDs:";
+  LOG(info) << "Registering FCT SensitiveLayerIDs:";
   for (int iLayer = 0; iLayer < mBackwardLayers.size(); iLayer++) {
-    auto layerID = gMC ? TVirtualMC::GetMC()->VolId(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), 0, iLayer)) : 0;
+    auto layerID = gMC ? TVirtualMC::GetMC()->VolId(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), 0, mBackwardLayers[iLayer].getLayerNumber())) : 0;
     mLayerID.push_back(layerID);
-    LOG(info) << "  mLayerID[" << iLayer << "] = " << layerID;
+    LOG(info) << "  mLayerID[" << mBackwardLayers[iLayer].getLayerNumber() << "] = " << layerID;
   }
   
   TCanvas *c1 = new TCanvas();
@@ -557,8 +578,8 @@ void Detector::defineSensitiveVolumes()
 
   // The names of the FCT sensitive volumes have the format: FCTSensor_(0,1)_(0...sNumberLayers-1)
   for (Int_t iLayer = 0; iLayer < mBackwardLayers.size(); iLayer++) {
-    volumeName = o2::fct::GeometryTGeo::getFCTSensorPattern() + std::to_string(iLayer);
-    v = geoManager->GetVolume(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), 0, iLayer));
+    volumeName = o2::fct::GeometryTGeo::getFCTSensorPattern() + std::to_string(mBackwardLayers[iLayer].getLayerNumber());
+    v = geoManager->GetVolume(Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), 0, mBackwardLayers[iLayer].getLayerNumber()));
     LOG(info) << "Adding FCT Sensitive Volume => " << v->GetName();
     AddSensitiveVolume(v);
   }

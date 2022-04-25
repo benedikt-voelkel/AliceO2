@@ -56,16 +56,24 @@ FCTLayer::FCTLayer(Int_t layerDirection, Int_t layerNumber, std::string layerNam
   } else if(type == 1) { // Square
     mSideLength = rOut_SideL;
   }
-  auto Si_X0 = 9.5;
-  mChipThickness = Layerx2X0 * Si_X0;
+  Float_t Si_X0 = 9.37; // In cm
+  Float_t Pb_X0 = 0.5612; // In cm
+  
   if(mType == 0){
+    mChipThickness = Layerx2X0 * Si_X0;
     LOG(info) << "Creating FCT Disk Layer " << mLayerNumber << " ; direction " << mDirection;
     LOG(info) << "   Using silicon X0 = " << Si_X0 << " to emulate layer radiation length.";
     LOG(info) << "   Layer z = " << mZ << " ; R_in = " << mInnerRadius << " ; R_out = " << mOuterRadius << " ; x2X0 = " << mx2X0 << " ; ChipThickness = " << mChipThickness;
   } else if(mType == 1){
+    mChipThickness = Layerx2X0 * Si_X0;
     LOG(info) << "Creating FCT Square Layer " << mLayerNumber << " ; direction " << mDirection;
     LOG(info) << "   Using silicon X0 = " << Si_X0 << " to emulate layer radiation length.";
     LOG(info) << "   Layer z = " << mZ << " ; R_in = " << mInnerRadius << " ; L_side = " << mSideLength << " ; x2X0 = " << mx2X0 << " ; ChipThickness = " << mChipThickness;
+  } else if(mType == 2){
+    mChipThickness = Layerx2X0 * Pb_X0;
+    LOG(info) << "Creating FCT Converter Layer " << mLayerNumber << " ; direction " << mDirection;
+    LOG(info) << "   Using lead X0 = " << Pb_X0 << " to emulate layer radiation length.";
+    LOG(info) << "   Layer z = " << mZ << " ; R_in = " << mInnerRadius << " ; R_out = " << mOuterRadius << " ; x2X0 = " << mx2X0 << " ; ChipThickness = " << mChipThickness;
   }
 }
 
@@ -75,6 +83,8 @@ void FCTLayer::createLayer(TGeoVolume* motherVolume)
     createDiskLayer(motherVolume);
   } else if(mType == 1) {
     createSquareLayer(motherVolume);
+  } else if(mType == 2){
+    createConverterLayer(motherVolume);
   }
   return;
 }
@@ -155,4 +165,38 @@ void FCTLayer::createSquareLayer(TGeoVolume* motherVolume){
     
     return;
   }
+}
+
+void FCTLayer::createConverterLayer(TGeoVolume* motherVolume){
+  if(mLayerNumber >= 0){
+    LOG(info) << "Constructing a passive converter layer and adding it to the motherVolume";
+    std::string chipName = o2::fct::GeometryTGeo::getFCTChipPattern() + std::to_string(mLayerNumber),
+                sensName = Form("%s_%d_%d", GeometryTGeo::getFCTSensorPattern(), mDirection, mLayerNumber);
+    TGeoTube* sensor = new TGeoTube(mInnerRadius, mOuterRadius, mChipThickness / 2);
+    TGeoTube* chip = new TGeoTube(mInnerRadius, mOuterRadius, mChipThickness / 2);
+    TGeoTube* layer = new TGeoTube(mInnerRadius, mOuterRadius, mChipThickness / 2);
+
+    TGeoMedium* medPb = gGeoManager->GetMedium("FCT_Pb$");
+    TGeoMedium* medAir = gGeoManager->GetMedium("FCT_AIR$");
+
+    TGeoVolume* sensVol = new TGeoVolume(sensName.c_str(), sensor, medPb);
+    TGeoVolume* chipVol = new TGeoVolume(chipName.c_str(), chip, medPb);
+    TGeoVolume* layerVol = new TGeoVolume(mLayerName.c_str(), layer, medPb);
+
+    LOG(info) << "Inserting " << sensVol->GetName() << " inside " << chipVol->GetName();
+    chipVol->AddNode(sensVol, 1, nullptr);
+
+    LOG(info) << "Inserting " << chipVol->GetName() << " inside " << layerVol->GetName();
+    layerVol->AddNode(chipVol, 1, nullptr);
+
+    // Finally put everything in the mother volume
+    auto* FwdDiskRotation = new TGeoRotation("FwdDiskRotation", 0, 0, 180);
+    auto* FwdDiskCombiTrans = new TGeoCombiTrans(0, 0, mZ, FwdDiskRotation);
+
+    LOG(info) << "Inserting " << layerVol->GetName() << " inside " << motherVolume->GetName();
+    motherVolume->AddNode(layerVol, 1, FwdDiskCombiTrans);    
+
+
+  }
+  return;
 }
