@@ -322,11 +322,19 @@ void AODProducerWorkflowDPL::fillTrackTablesPerCollision(int collisionID,
             continue;
           }
           addToMFTTracksTable(mftTracksCursor, ambigMFTTracksCursor, trackIndex, data, collisionID, collisionBC, bcsMap);
+          mGIDToTableMFTID.emplace(trackIndex, mIndexMFTID);
+          mIndexTableMFT[trackIndex.getIndex()] = mIndexMFTID;
+          mIndexMFTID++;
         } else if (src == GIndex::Source::MCH || src == GIndex::Source::MFTMCH) {                        // FwdTracks tracks are treated separately since they are stored in a different table
           if (trackIndex.isAmbiguous() && mGIDToTableFwdID.find(trackIndex) != mGIDToTableFwdID.end()) { // was it already stored ?
             continue;
           }
           addToFwdTracksTable(fwdTracksCursor, fwdTracksCovCursor, ambigFwdTracksCursor, trackIndex, data, collisionID, collisionBC, bcsMap);
+          mGIDToTableFwdID.emplace(trackIndex, mIndexFwdID);
+          if (src == GIndex::Source::MCH) {
+            mIndexTableFwd[trackIndex.getIndex()] = mIndexFwdID;
+          }
+          mIndexFwdID++;
         } else {
           // barrel track: normal tracks table
           if (trackIndex.isAmbiguous() && mGIDToTableID.find(trackIndex) != mGIDToTableID.end()) { // was it already stored ?
@@ -346,39 +354,6 @@ void AODProducerWorkflowDPL::fillTrackTablesPerCollision(int collisionID,
           }
           mGIDToTableID.emplace(trackIndex, mTableTrID);
           mTableTrID++;
-        }
-      }
-    }
-  }
-}
-
-void AODProducerWorkflowDPL::fillIndexTablesPerCollision(const o2::dataformats::VtxTrackRef& trackRef, const gsl::span<const GIndex>& GIndices)
-{
-  for (int src : {GIndex::Source::MFTMCH, GIndex::Source::MCH, GIndex::Source::MFT}) {
-    int start = trackRef.getFirstEntryOfSource(src);
-    int end = start + trackRef.getEntriesOfSource(src);
-    for (int ti = start; ti < end; ti++) {
-      auto& trackIndex = GIndices[ti];
-      if (GIndex::includesSource(src, mInputSources)) {
-        if (src == GIndex::Source::MFT) {
-          if (trackIndex.isAmbiguous() && mGIDToTableMFTID.find(trackIndex) != mGIDToTableMFTID.end()) {
-            continue;
-          }
-
-          mGIDToTableMFTID.emplace(trackIndex, mIndexMFTID);
-          mIndexTableMFT[trackIndex.getIndex()] = mIndexMFTID;
-          mIndexMFTID++;
-
-        } else if (src == GIndex::Source::MCH || src == GIndex::Source::MFTMCH) {
-          if (trackIndex.isAmbiguous() && mGIDToTableFwdID.find(trackIndex) != mGIDToTableFwdID.end()) {
-            continue;
-          }
-
-          mGIDToTableFwdID.emplace(trackIndex, mIndexFwdID);
-          if (src == GIndex::Source::MCH) {
-            mIndexTableFwd[trackIndex.getIndex()] = mIndexFwdID;
-          }
-          mIndexFwdID++;
         }
       }
     }
@@ -1515,15 +1490,6 @@ void AODProducerWorkflowDPL::run(ProcessingContext& pc)
   int collisionID = 0;
   mIndexTableMFT.resize(recoData.getMFTTracks().size());
   mIndexTableFwd.resize(recoData.getMCHTracks().size() * 3); // take an upperbound to the size of the FwdTrack table
-
-  auto& trackReffwd = primVer2TRefs.back();
-  fillIndexTablesPerCollision(trackReffwd, primVerGIs);
-  collisionID = 0;
-  for (auto& vertex : primVertices) {
-    auto& trackReffwd = primVer2TRefs[collisionID];
-    fillIndexTablesPerCollision(trackReffwd, primVerGIs); // this function must follow the same track order as 'fillTrackTablesPerCollision' to fill the map of track indices
-    collisionID++;
-  }
 
   // filling unassigned tracks first
   // so that all unassigned tracks are stored in the beginning of the table together
