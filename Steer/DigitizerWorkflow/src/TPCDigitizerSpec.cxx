@@ -144,7 +144,7 @@ class TPCDPLDigitizerTask : public BaseDPLDigitizer
   {
     LOG(info) << "Initializing TPC digitization";
 
-    mFilterOnSignal = ic.options().get<bool>("filter-on-signal");
+    //mFilterOnSignal = ic.options().get<bool>("filter-on-signal");
 
     mLaneId = ic.services().get<const o2::framework::DeviceSpec>().rank;
 

@@ -233,7 +233,7 @@ class ITSMFTDPLDigitizerTask : BaseDPLDigitizer
                                                 mWithMCTruth(mctruth),
                                                 // these coordinates are roughly the extent of the ALPIDE chips in the global frame
                                                 // TODO: choose number of voxels so that a voxel has the size on the order of an ALPIDE chip
-                                                mHitVoxels(vecgeom::Vector3D<float>(-40, -40, -75.5), vecgeom::Vector3D<float>(80, 80, 151), 100, 100, 100)
+                                                mHitVoxels(vecgeom::Vector3D<float>(-40, -40, -75.5), vecgeom::Vector3D<float>(80, 80, 151), o2::itsmft::DPLDigitizerParam<o2::detectors::DetID::ITS>::Instance().voxelsX, o2::itsmft::DPLDigitizerParam<o2::detectors::DetID::ITS>::Instance().voxelsY, o2::itsmft::DPLDigitizerParam<o2::detectors::DetID::ITS>::Instance().voxelsZ)
   {
   }
 
