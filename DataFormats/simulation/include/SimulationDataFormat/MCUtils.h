@@ -113,6 +113,79 @@ inline bool isStable(int pdg)
   return false;
 }
 
+int entangleStatusCodes(int hepmc, int gen)
+{
+  // This is explicitly testing with 2 bytes
+  constexpr size_t s = 2; //sizeof(int);
+
+  // This is with the system implementation
+  //constexpr size_t s = sizeof(int);
+
+
+  // The factor 2 comes from multiplying number of bytes by 8 and dividing by 4 to get quarters of the number of bits
+  // HepMC gets 1 quarter of bits and 1 additional bit
+  constexpr size_t bitsHepmc = 2 * s + 1;
+  // Gen gets 3 quarters of bits minus 1 bit
+  constexpr size_t bitsGen = 3 * 2 * s - 1;
+
+  // if negative, set our sign bits
+  auto negBitHepmc = (static_cast<int>(hepmc < 0)<<(s*8-1));
+  auto negBitGen = (static_cast<int>(gen < 0)<<(bitsGen-1));
+
+  // taking really the absolute value makes sure the implementation for negative numbers is used and we don't have to do any bit magic at this point
+  auto absHepmc = std::abs(hepmc);
+  auto absGen = std::abs(gen);
+
+  // for HepMC we shift by the entire number of bits that might be taken by generator bits
+  auto entangled = (absHepmc << (bitsGen));
+  // or with generator bits to have them in
+  entangled |= absGen;
+  // or with negative bits (might be 0 if these were already positive numbers)
+  entangled |= negBitHepmc;
+  entangled |= negBitGen;
+  
+  return entangled;
+}
+
+void disentangleStatusCode(int entangled, int& hepmc, int& gen)
+{
+  // This is explicitly testing with 2 bytes
+  constexpr size_t s = 2; //sizeof(int);
+
+  // This is with the system implementation
+  //constexpr size_t s = sizeof(int);
+
+  
+  // The factor 2 comes from multiplying number of bytes by 8 and dividing by 4 to get quarters of the number of bits
+  // HepMC gets 1 quarter of bits and 1 additional bit
+  constexpr size_t bitsHepmc = 2 * s + 1;
+  // Gen gets 3 quarters of bits minus 1 bit
+  constexpr size_t bitsGen = 3 * 2 * s - 1;
+
+  // these are our negative bits
+  constexpr int negBitHepmc = (1<<(s*8-1));
+  constexpr int negBitGen = (1<<(bitsGen-1));
+
+  // the masks
+  constexpr int maskGen = (1<<(bitsGen - 1)) - 1;
+  constexpr int maskHepmc = ((1<<(bitsHepmc - 1)) - 1) << (bitsGen);
+
+  // generator is easy, the same bits as final number (up to signed bit)
+  gen = (maskGen & entangled);
+  // check if negative and multiply
+  if (static_cast<int>((negBitGen & entangled)) != 0) {
+    gen *= -1;
+  };
+
+  // Extract HepMC, first get the bits
+  hepmc = (maskHepmc & entangled);
+  // shift back to original spot
+  hepmc = hepmc >> bitsGen;
+  // check if negative and multiply
+  if (static_cast<int>((negBitHepmc & entangled)) != 0) {
+    hepmc *= -1;
+  };
+
 } // namespace mcutils
 } // namespace o2
 
