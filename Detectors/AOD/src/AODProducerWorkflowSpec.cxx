@@ -1838,16 +1838,16 @@ void AODProducerWorkflowDPL::run(ProcessingContext& pc)
         if (nParts == 1 || sourceID == 0) {
           // FIXME:
           // use generators' names for generatorIDs (?)
-          short generatorID = sourceID;
           auto& header = mcReader->getMCEventHeader(sourceID, eventID);
           mcCollisionsCursor(bcID,
-                             generatorID,
+                             o2::mcutils::getEncodedGenId(&header, sourceID),
                              truncateFloatFraction(header.GetX(), mCollisionPosition),
                              truncateFloatFraction(header.GetY(), mCollisionPosition),
                              truncateFloatFraction(header.GetZ(), mCollisionPosition),
                              truncateFloatFraction(time, mCollisionPosition),
                              truncateFloatFraction(mcColWeight, mCollisionPosition),
                              header.GetB());
+
         }
         mcColToEvSrc.emplace_back(std::vector<int>{iCol, sourceID, eventID}); // point background and injected signal events to one collision
       }

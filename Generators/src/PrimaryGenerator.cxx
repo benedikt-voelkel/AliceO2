@@ -15,6 +15,7 @@
 #include "Generators/Generator.h"
 #include "SimConfig/InteractionDiamondParam.h"
 #include "SimulationDataFormat/MCEventHeader.h"
+#include "SimulationDataFormat/MCUtils.h"
 #include "DataFormatsCalibration/MeanVertexObject.h"
 #include "DetectorsBase/Stack.h"
 #include <fairlogger/Logger.h>
@@ -76,7 +77,11 @@ Bool_t PrimaryGenerator::GenerateEvent(FairGenericStack* pStack)
   /** normal generation if no embedding **/
   if (!mEmbedTree) {
     fixInteractionVertex(); // <-- always fixes vertex outside of FairROOT
-    return FairPrimaryGenerator::GenerateEvent(pStack);
+    auto ret = FairPrimaryGenerator::GenerateEvent(pStack);
+    if (ret) {
+      setGeneratorInformation();
+    }
+    return ret;
   }
 
   /** this is for embedding **/
@@ -105,6 +110,7 @@ Bool_t PrimaryGenerator::GenerateEvent(FairGenericStack* pStack)
     o2event->setEmbeddingFileName(mEmbedFile->GetName());
     o2event->setEmbeddingEventIndex(mEmbedIndex);
   }
+  setGeneratorInformation();
 
   /** increment embedding counter **/
   mEmbedIndex++;
@@ -335,6 +341,17 @@ Bool_t PrimaryGenerator::embedInto(TString fname)
 
   /** success **/
   return kTRUE;
+}
+
+/*****************************************************************/
+
+void PrimaryGenerator::setGeneratorInformation()
+{
+  auto o2event = dynamic_cast<MCEventHeader*>(fEvent);
+  if (o2event) {
+      o2event->putInfo<int>(o2::mcutils::GeneratorProperty::GENERATORID, mGeneratorId);
+      o2event->putInfo<std::string>(o2::mcutils::GeneratorProperty::GENERATORDESCRIPTION, mGeneratorDescription);
+  }
 }
 
 /*****************************************************************/

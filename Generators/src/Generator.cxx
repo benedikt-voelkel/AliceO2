@@ -17,6 +17,7 @@
 #include "SimulationDataFormat/MCEventHeader.h"
 #include "SimulationDataFormat/ParticleStatus.h"
 #include "SimulationDataFormat/MCGenStatus.h"
+#include "SimulationDataFormat/MCUtils.h"
 #include "FairPrimaryGenerator.h"
 #include <fairlogger/Logger.h>
 #include <cmath>
@@ -70,6 +71,9 @@ Bool_t
     /** clear particle vector **/
     mParticles.clear();
 
+    /** reset the cocktail ID **/
+    mCocktailId = -1;
+
     /** generate event **/
     if (!generateEvent()) {
       return kFALSE;
@@ -77,6 +81,14 @@ Bool_t
 
     /** import particles **/
     if (!importParticles()) {
+      return kFALSE;
+    }
+
+    if (mCocktailIdToDesc.empty() && mCocktailId > -1) {
+      return kFALSE;
+    }
+
+    if (!mCocktailIdToDesc.empty() && mCocktailId < 0) {
       return kFALSE;
     }
 
@@ -102,6 +114,7 @@ Bool_t
     return kFALSE;
   }
   updateHeader(o2header);
+  updateCocktailInformation(o2header);
 
   /** success **/
   return kTRUE;
@@ -204,6 +217,17 @@ Bool_t
 
   /** return **/
   return triggered;
+}
+
+/*****************************************************************/
+
+void Generator::updateCocktailInformation(o2::dataformats::MCEventHeader* header) const
+{
+  if (mCocktailId < 0) {
+    return;
+  }
+  header->putInfo<int>(o2::mcutils::GeneratorProperty::COCKTAILID, mCocktailId);
+  header->putInfo<std::unordered_map<int, std::string>>(o2::mcutils::GeneratorProperty::COCKTAILDESCRIPTIONMAP, mCocktailIdToDesc);
 }
 
 /*****************************************************************/
