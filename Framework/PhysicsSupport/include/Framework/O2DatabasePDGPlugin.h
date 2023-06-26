@@ -18,8 +18,7 @@
 namespace o2::framework
 {
 
-struct O2DatabasePDGImpl : public TDatabasePDG
-{
+struct O2DatabasePDGImpl : public TDatabasePDG {
   Double_t Mass(int pdg, bool& success)
   {
     // wrap our own Mass function to expose it in the service
