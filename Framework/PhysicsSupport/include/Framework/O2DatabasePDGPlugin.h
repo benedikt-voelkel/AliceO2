@@ -12,11 +12,22 @@
 #define O2_FRAMEWORK_O2DATABASEPDG_H_
 
 #include "Framework/Plugins.h"
+#include "SimulationDataFormat/O2DatabasePDG.h"
 #include "TDatabasePDG.h"
 
 namespace o2::framework
 {
-struct O2DatabasePDG : LoadableServicePlugin<TDatabasePDG> {
+
+struct O2DatabasePDGImpl : public TDatabasePDG
+{
+  Double_t Mass(int pdg, bool& success)
+  {
+    // wrap our own Mass function to expose it in the service
+    return o2::O2DatabasePDG::Mass(pdg, success, this);
+  }
+};
+
+struct O2DatabasePDG : LoadableServicePlugin<O2DatabasePDGImpl> {
   O2DatabasePDG() : LoadableServicePlugin{"O2FrameworkPhysicsSupport:PDGSupport"}
   {
   }
