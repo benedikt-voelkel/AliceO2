@@ -1278,7 +1278,7 @@ DECLARE_SOA_COLUMN(PosZ, posZ, float);                       //! Z vertex positi
 DECLARE_SOA_COLUMN(T, t, float);                             //! Collision time relative to given bc in ns
 DECLARE_SOA_COLUMN(Weight, weight, float);                   //! MC weight
 DECLARE_SOA_COLUMN(ImpactParameter, impactParameter, float); //! Impact parameter for A-A
-DECLARE_SOA_DYNAMIC_COLUMN(GetGenId, getGenId, //! The global generator ID which might have been assigned by the user
+DECLARE_SOA_DYNAMIC_COLUMN(GetGenId, getGenId,               //! The global generator ID which might have been assigned by the user
                            [](short generatorsID) -> int { return o2::mcgenid::getGeneratorId(generatorsID); });
 DECLARE_SOA_DYNAMIC_COLUMN(GetCocktailId, getCocktailId, //! A specific cocktail ID in case the generator consisted of multiple cocktail constituents
                            [](short generatorsID) -> int { return o2::mcgenid::getCocktailId(generatorsID); });

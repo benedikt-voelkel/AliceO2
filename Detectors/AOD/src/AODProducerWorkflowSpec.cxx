@@ -1849,7 +1849,6 @@ void AODProducerWorkflowDPL::run(ProcessingContext& pc)
                              truncateFloatFraction(time, mCollisionPosition),
                              truncateFloatFraction(mcColWeight, mCollisionPosition),
                              header.GetB());
-
         }
         mcColToEvSrc.emplace_back(std::vector<int>{iCol, sourceID, eventID}); // point background and injected signal events to one collision
       }

@@ -16,7 +16,6 @@
 #include <SimulationDataFormat/MCUtils.h>
 #include <SimulationDataFormat/MCGenProperties.h>
 
-
 namespace o2::mcutils
 {
 
@@ -223,6 +222,5 @@ void MCGenHelper::encodeParticleStatusAndTracking(TParticle& particle, int hepmc
   particle.SetStatusCode(mcgenstatus::MCGenStatusEncoding(hepmcStatus, genStatus).fullEncoding);
   particle.SetBit(ParticleStatus::kToBeDone, wanttracking);
 }
-
 
 } // namespace o2::mcutils

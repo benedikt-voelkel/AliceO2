@@ -355,8 +355,8 @@ void PrimaryGenerator::setGeneratorInformation()
 {
   auto o2event = dynamic_cast<MCEventHeader*>(fEvent);
   if (o2event) {
-      o2event->putInfo<int>(o2::mcgenid::GeneratorProperty::GENERATORID, mGeneratorId);
-      o2event->putInfo<std::string>(o2::mcgenid::GeneratorProperty::GENERATORDESCRIPTION, mGeneratorDescription);
+    o2event->putInfo<int>(o2::mcgenid::GeneratorProperty::GENERATORID, mGeneratorId);
+    o2event->putInfo<std::string>(o2::mcgenid::GeneratorProperty::GENERATORDESCRIPTION, mGeneratorDescription);
   }
 }
 

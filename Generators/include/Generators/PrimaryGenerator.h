@@ -116,8 +116,8 @@ class PrimaryGenerator : public FairPrimaryGenerator
 
   o2::conf::VertexMode mVertexMode = o2::conf::VertexMode::kDiamondParam; // !vertex mode
   std::unique_ptr<o2::dataformats::MeanVertexObject> mMeanVertex;
- private:
 
+ private:
   void setGeneratorInformation();
   // generator identifier and description
   int mGeneratorId = -1;

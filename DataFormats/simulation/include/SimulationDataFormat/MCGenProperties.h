@@ -74,19 +74,20 @@ inline int getGenStatusCode(int encoded)
   return getGenStatusCode(MCGenStatusEncoding(encoded));
 }
 
-} // mcgenstatus
+} // namespace mcgenstatus
 
-namespace mcgenid {
+namespace mcgenid
+{
 
 // Define some common properties that can be set for Generators
 class GeneratorProperty
 {
-  public:
-    typedef const char* Property;
-    static constexpr Property GENERATORID{"generator_id"};
-    static constexpr Property GENERATORDESCRIPTION{"generator_description"};
-    static constexpr Property COCKTAILID{"cocktail_id"};
-    static constexpr Property COCKTAILDESCRIPTIONMAP{"gcocktail_description_map"};
+ public:
+  typedef const char* Property;
+  static constexpr Property GENERATORID{"generator_id"};
+  static constexpr Property GENERATORDESCRIPTION{"generator_description"};
+  static constexpr Property COCKTAILID{"cocktail_id"};
+  static constexpr Property COCKTAILDESCRIPTIONMAP{"gcocktail_description_map"};
 };
 
 // internal structure to allow convenient manipulation of properties as bits on an int to (dis)entangle HepMC and specific generator status codes
@@ -94,7 +95,7 @@ union MCGenIdEncoding {
   MCGenIdEncoding() : fullEncoding(0) {}
   MCGenIdEncoding(int enc) : fullEncoding(enc) {}
   // To be backward-compatible, only set transport to 1 if hepmc status is 1
-  MCGenIdEncoding(int generatorId, int sourceId, int cocktailId=-1) : generatorId(generatorId), sourceId(sourceId), cocktailId(cocktailId) {}
+  MCGenIdEncoding(int generatorId, int sourceId, int cocktailId = -1) : generatorId(generatorId), sourceId(sourceId), cocktailId(cocktailId) {}
   short fullEncoding;
   struct {
     short generatorId : 5; // an additional identifier for a generator which can be set by the user
@@ -103,7 +104,7 @@ union MCGenIdEncoding {
   };
 };
 
-inline short getEncodedGenId(int generatorId, int sourceId, int cocktailId=-1)
+inline short getEncodedGenId(int generatorId, int sourceId, int cocktailId = -1)
 {
   return MCGenIdEncoding(generatorId, sourceId, cocktailId).fullEncoding;
 }
