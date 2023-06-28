@@ -33,7 +33,6 @@
 #include <Generators/GeneratorHepMCParam.h>
 #endif
 #include <Generators/PrimaryGenerator.h>
-#include <Generators/PrimaryGeneratorParam.h>
 #include <Generators/BoxGunParam.h>
 #include <Generators/TriggerParticle.h>
 #include <Generators/TriggerExternalParam.h>
@@ -57,11 +56,6 @@ void GeneratorFactory::setPrimaryGenerator(o2::conf::SimConfig const& conf, Fair
   }
 
   auto primGenO2 = dynamic_cast<PrimaryGenerator*>(primGen);
-  if (primGenO2) {
-    auto& params = PrimaryGeneratorParam::Instance();
-    primGenO2->setGeneratorId(params.id);
-    primGenO2->setGeneratorDescription(params.description);
-  }
 
   auto makeBoxGen = [](int pdgid, int mult, double etamin, double etamax, double pmin, double pmax, double phimin, double phimax, bool debug = false) {
     auto gen = new FairBoxGenerator(pdgid, mult);

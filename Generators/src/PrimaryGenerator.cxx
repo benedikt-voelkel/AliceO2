@@ -12,10 +12,11 @@
 /// \author R+Preghenella - June 2017
 
 #include "Generators/PrimaryGenerator.h"
+#include <Generators/PrimaryGeneratorParam.h>
 #include "Generators/Generator.h"
 #include "SimConfig/InteractionDiamondParam.h"
 #include "SimulationDataFormat/MCEventHeader.h"
-#include "SimulationDataFormat/MCUtils.h"
+#include "SimulationDataFormat/MCGenProperties.h"
 #include "DataFormatsCalibration/MeanVertexObject.h"
 #include "DetectorsBase/Stack.h"
 #include <fairlogger/Logger.h>
@@ -56,6 +57,11 @@ Bool_t PrimaryGenerator::Init()
   /** init **/
 
   LOG(info) << "Initialising primary generator";
+
+  // set generator ID and description
+  auto& params = PrimaryGeneratorParam::Instance();
+  setGeneratorId(params.id);
+  setGeneratorDescription(params.description);
 
   /** embedding **/
   if (mEmbedTree) {
@@ -349,8 +355,8 @@ void PrimaryGenerator::setGeneratorInformation()
 {
   auto o2event = dynamic_cast<MCEventHeader*>(fEvent);
   if (o2event) {
-      o2event->putInfo<int>(o2::mcutils::GeneratorProperty::GENERATORID, mGeneratorId);
-      o2event->putInfo<std::string>(o2::mcutils::GeneratorProperty::GENERATORDESCRIPTION, mGeneratorDescription);
+      o2event->putInfo<int>(o2::mcgenid::GeneratorProperty::GENERATORID, mGeneratorId);
+      o2event->putInfo<std::string>(o2::mcgenid::GeneratorProperty::GENERATORDESCRIPTION, mGeneratorDescription);
   }
 }
 

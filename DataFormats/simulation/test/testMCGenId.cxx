@@ -13,10 +13,10 @@
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-#include "SimulationDataFormat/MCUtils.h"
+#include "SimulationDataFormat/MCGenProperties.h"
 #include "TRandom.h"
 
-using namespace o2::mcutils;
+using namespace o2::mcgenid;
 
 BOOST_AUTO_TEST_CASE(MCGenId_test)
 {

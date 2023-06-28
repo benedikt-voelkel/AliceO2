@@ -16,8 +16,7 @@
 #include "Generators/PrimaryGenerator.h"
 #include "SimulationDataFormat/MCEventHeader.h"
 #include "SimulationDataFormat/ParticleStatus.h"
-#include "SimulationDataFormat/MCGenStatus.h"
-#include "SimulationDataFormat/MCUtils.h"
+#include "SimulationDataFormat/MCGenProperties.h"
 #include "FairPrimaryGenerator.h"
 #include <fairlogger/Logger.h>
 #include <cmath>
@@ -226,8 +225,8 @@ void Generator::updateCocktailInformation(o2::dataformats::MCEventHeader* header
   if (mCocktailId < 0) {
     return;
   }
-  header->putInfo<int>(o2::mcutils::GeneratorProperty::COCKTAILID, mCocktailId);
-  header->putInfo<std::unordered_map<int, std::string>>(o2::mcutils::GeneratorProperty::COCKTAILDESCRIPTIONMAP, mCocktailIdToDesc);
+  header->putInfo<int>(o2::mcgenid::GeneratorProperty::COCKTAILID, mCocktailId);
+  header->putInfo<std::unordered_map<int, std::string>>(o2::mcgenid::GeneratorProperty::COCKTAILDESCRIPTIONMAP, mCocktailIdToDesc);
 }
 
 /*****************************************************************/
