@@ -98,9 +98,9 @@ union MCGenIdEncoding {
   MCGenIdEncoding(int generatorId, int sourceId, int subGeneratorId = -1) : generatorId(generatorId), sourceId(sourceId), subGeneratorId(subGeneratorId) {}
   short fullEncoding;
   struct {
-    short generatorId : 7;     // an additional identifier for a generator which can be set by the user
-    short sourceId : 4;        // ID used in embedding scenarios
-    short subGeneratorId : 5;  // sub generator ID in case a generator implements some additional logic
+    short generatorId : 7;    // an additional identifier for a generator which can be set by the user
+    short sourceId : 4;       // ID used in embedding scenarios
+    short subGeneratorId : 5; // sub generator ID in case a generator implements some additional logic
   };
 };
 
