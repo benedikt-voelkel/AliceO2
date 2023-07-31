@@ -27,8 +27,11 @@ namespace o2
 struct MCReplayParam : public o2::conf::ConfigurableParamHelper<MCReplayParam> {
   std::string stepTreename = "StepLoggerTree";          // name of the TTree containing the actual steps
   std::string stepFilename = "MCStepLoggerOutput.root"; // filename where to find the stepTreename
-  float energyCut = -1.;                                // minimum energy required for a step to continue tracking
-  std::string cutFile = "";
+  float energyCut = -1.;                                // global minimum energy required for a step to continue tracking, not set by default
+  std::string cutFile = "";                             // path to the cut file to be processed locally
+  bool allowStopTrack = false;                          // decide whether TVirtualMC::StopTrack has an effect
+  bool blockProcessesCuts = false;                      // decide whether or not to block the cut setting after the MCReplayEngine has been constructed
+                                                        // blocking can be useful for debugging
   O2ParamDef(MCReplayParam, "MCReplayParam");
 };
 } // end namespace o2
