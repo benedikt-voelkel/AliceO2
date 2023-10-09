@@ -70,6 +70,8 @@ class O2MCApplicationBase : public FairMCApplication
   void finishEventCommon();
   TrackRefFcn mTrackRefFcn; // a function hook that gets (optionally) called during Stepping
   void initTrackRefHook();
+  std::vector<float> mCutR;
+  std::vector<float> mEdgesZ;
 
   ClassDefOverride(O2MCApplicationBase, 1);
 };
