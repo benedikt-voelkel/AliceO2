@@ -82,12 +82,9 @@ void O2MCApplicationBase::Stepping()
     // can be generalized later on
     auto outOfR = [x, y, this](float z) {
       // for the moment for cases when we have ZDC enabled
-      for (int i = 0; i < mCutR.size(); i++) {
-        if (z < mEdgesZ[i]) {
-          return false;
-        }
-        if (mEdgesZ[i] <= z && z < mEdgesZ[i+1]) {
-          return mCutR[i] > 0 && (x * x + y * y) > mCutR[i];
+      if (std::abs(z) > mCutParams.tunnelZ) {
+        if ((x * x + y * y) > mCutParams.maxRTrackingZDC * mCutParams.maxRTrackingZDC) {
+          return true;
         }
       }
       return false;
@@ -95,10 +92,11 @@ void O2MCApplicationBase::Stepping()
 
     if (z > mCutParams.ZmaxA ||
         -z > mCutParams.ZmaxC ||
-        outOfR(z)) {
+        outOfR(z) || !mVoxels->isOccupied(vecgeom::Vector3D<float>(x, y, z))) {
       fMC->StopTrack();
       return;
     }
+
   }
 
   if (mCutParams.stepTrackRefHook) {
@@ -142,36 +140,8 @@ void O2MCApplicationBase::ConstructGeometry()
     voltomodulefile << vol->GetName() << ":" << mModIdToName[iter->second] << "\n";
   }
 
-  if (!mCutParams.stepFilteringFile.empty()) {
-    std::ifstream ifs;
-    ifs.open(mCutParams.stepFilteringFile.c_str());
-    if (!ifs.is_open()) {
-        std::cerr << "Cannot open volume map file at " << mCutParams.stepFilteringFile << "\n";
-        return;
-    }
-
-    std::string line;
-    int countLine{};
-    while (std::getline(ifs, line)) {
-      if (countLine > 1) {
-        break;
-      }
-      std::istringstream ss(line);
-      std::string token;
-      int counter = 0;
-      while (std::getline(ss, token, ' ')) {
-        if (!token.empty()) {
-          if (countLine == 0) {
-            mEdgesZ.push_back(std::stof(token));
-          } else if (countLine == 1) {
-            mCutR.push_back(std::stof(token) * std::stof(token));
-          }
-        }
-      }
-      countLine++;
-    }
-    ifs.close();
-  }
+  auto voxels = vecgeom::FlatVoxelHashMap<bool,true>::readFromTFile(mCutParams.stepFilteringFile.c_str());
+  mVoxels.reset(voxels);
 }
 
 void O2MCApplicationBase::InitGeometry()

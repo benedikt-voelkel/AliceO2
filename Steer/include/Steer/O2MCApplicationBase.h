@@ -23,6 +23,7 @@
 #include "Rtypes.h" // for Int_t, Bool_t, Double_t, etc
 #include <TVirtualMC.h>
 #include "SimConfig/SimParams.h"
+#include <VecGeom/base/FlatVoxelHashMap.h>
 
 namespace o2
 {
@@ -70,8 +71,8 @@ class O2MCApplicationBase : public FairMCApplication
   void finishEventCommon();
   TrackRefFcn mTrackRefFcn; // a function hook that gets (optionally) called during Stepping
   void initTrackRefHook();
-  std::vector<float> mCutR;
-  std::vector<float> mEdgesZ;
+  std::unique_ptr<vecgeom::FlatVoxelHashMap<bool,true>> mVoxels;
+
 
   ClassDefOverride(O2MCApplicationBase, 1);
 };
